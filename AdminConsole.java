@@ -5,6 +5,9 @@ import java.io.*;
 import java.util.ArrayList;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.text.SimpleDateFormat;  
+import java.util.Date; 
+import java.text.ParseException;
 
 public class AdminConsole extends UnicastRemoteObject implements AdminConsole_Interface{
 
@@ -22,32 +25,95 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 	
 	/*===============*/
 
-	private registarEleitor()
-	{
-		Pessoa p;
-		String nome, password, departamento, faculdade, contacto, morada, validade_cc;
-		int numero;
+	public static void registarEleitor(ServerRMI_Interface server)	{
+		String nome, password, departamento, faculdade, contacto, morada, validade_cc, funcao;
+		int numero, opt;
 		InputStreamReader input = new InputStreamReader(System.in);
 		BufferedReader reader = new BufferedReader(input);
 
-		System.out.print("NOME: ");
-		nome = reader.readLine();
-		System.out.print("CÓDIGO: ");
-		password = reader.readLine();
-		System.out.print("FACULDADE: ");
-		faculdade = reader.readLine();
-		System.out.print("DEPARTAMENTO: ");
-		departamento = reader.readerdLine();
-		System.out.print("NÚMERO: ");
-		numero = Integer.parseInt(reader.readLine());
-		System.out.print("CONTACTO: ");
-		contacto = reader.readLine();
-		System.out.print("MORADA: ");
-		morada = reader.readLine();
-		System.out.print("VALIDADE CC: ");
-		validade_cc= reader.readLine();
+		try{
+			System.out.print("[1]  ALUNO\n[2]  DOCENTE\n[3]  FUNCIONARIO\nTIPO: ");
+			opt = Integer.parseInt(reader.readLine());
+			System.out.print("NOME: ");
+			nome = reader.readLine();
+			System.out.print("CODIGO: ");
+			password = reader.readLine();
+			System.out.print("FACULDADE: ");
+			faculdade = reader.readLine();
+			System.out.print("DEPARTAMENTO: ");
+			departamento = reader.readLine();
+			System.out.print("NUMERO: ");
+			numero = Integer.parseInt(reader.readLine());
+			System.out.print("CONTACTO: ");
+			contacto = reader.readLine();
+			System.out.print("MORADA: ");
+			morada = reader.readLine();
+			System.out.print("VALIDADE CC: ");
+			validade_cc= reader.readLine();
 
-		p = new Pessoa(nome, password, departamento, faculdade, contacto, morada, numero, validade_cc);
+			switch(opt){
+				case 1:
+					if(server.registarEstudante(new Estudante(nome, password, departamento, faculdade, contacto, morada, numero, validade_cc))){
+						System.out.println("\nREGISTO COM SUCESSO");
+					}
+					else{
+						System.out.println("\n[ERRO NO REGISTO]  JA EXISTE UM REGISTO DE ESTUDANTE COM O NUMERO: " +numero);
+					}
+					break;
+				case 2:
+					if(server.registarDocente(new Docente(nome, password, departamento, faculdade, contacto, morada, numero, validade_cc))){
+						System.out.println("\nREGISTO COM SUCESSO");
+					}
+					else{
+						System.out.println("\n[ERRO NO REGISTO]  JA EXISTE UM REGISTO DE DOCENTE COM O NUMERO: " +numero);
+					}
+					break;
+				case 3:
+					if(server.registarFuncionario(new Funcionario(nome, password, departamento, faculdade, contacto, morada, numero, validade_cc))){
+						System.out.println("\nREGISTO COM SUCESSO");
+					}
+					else{
+						System.out.println("\n[ERRO NO REGISTO]  JA EXISTE UM REGISTO DE FUNCIONARIO COM O NUMERO: " +numero);
+					}
+					break;
+			}
+		}catch(IOException e1)		{
+			System.out.println(e1);
+		}
+	}
+
+	public static void criarEleicao(ServerRMI_Interface server) {
+		String s_data_inicio, s_data_fim, titulo, descricao;
+		Date data_inicio, data_fim;
+		Eleicao e;
+		InputStreamReader input = new InputStreamReader(System.in);
+		BufferedReader reader = new BufferedReader(input);
+		SimpleDateFormat formatter=new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+		
+		try{
+			System.out.print("TITULO: ");
+			titulo = reader.readLine();
+			System.out.print("DESCRICAO: ");
+			descricao = reader.readLine();
+			System.out.print("DATA INICIO [dd-mm-aaaa hh:mm:ss]: ");
+			s_data_inicio = reader.readLine();
+			data_inicio = formatter.parse(s_data_inicio);
+			System.out.print("DATA FIM [dd-mm-aaaa hh:mm:ss]: ");
+			s_data_fim = reader.readLine();
+			data_fim = formatter.parse(s_data_fim);
+
+			if(server.registarEleicao(new Eleicao(titulo, descricao, data_inicio, data_fim))){
+				System.out.println("\nELEICAO CRIADA COM SUCESSO");
+			}
+			else{
+				System.out.println("\n[ERRO AO CRIAR ELEICAO]  JA EXISTE UMA ELEICAO COM O TITULO: " + titulo);
+			}
+
+		} catch(ParseException p1){
+			System.out.println(p1);
+		} catch(IOException e2)		{
+			System.out.println(e2);
+		}
 	}
 
 	public static void main(String args[]) {
@@ -61,7 +127,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 
 			ServerRMI_Interface server = (ServerRMI_Interface) LocateRegistry.getRegistry(7000).lookup("ServerRMI");
 
-			String ligado = "New AdminConsole created.";
+			String ligado = "NOVO ADMINISTRADOR CONECTADO";
 			server.print_on_ServerRMI(ligado);
 
 			
@@ -71,16 +137,79 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 			BufferedReader reader = new BufferedReader(input);
 			while(option != 0)
 			{
-				System.out.println("[0]  SAIR\n[1]  REGISTAR ELEITOR\n[2]  CRIAR ELEIÇÃO");
-				option = Integer.parseInt(reader.readLine());
-				switch(option){
-					case 1:
-						System.out.println("\n=============REGISTAR ELEITOR=============\n");
-						registarEleitor();
-						System.out.println("\n==========================================\n");
-						break;
-					case 2:
-						break;
+				try{
+					System.out.println("====================OPERACOES DISPONIVEIS====================\n");
+					System.out.println("[0]  SAIR");
+					System.out.println("[1]  REGISTAR ELEITOR");
+					System.out.println("[2]  CRIAR ELEICAO");
+					System.out.println("[3]  GERIR LISTAS DE CANDIDATOS");
+					System.out.println("[4]  GERIR MESAS DE VOTO");
+					System.out.println("[5]  ALTERAR PROPRIEDADES DE UMA ELEICAO");
+					System.out.println("[6]  ONDE VOTOU O ELEITOR");
+					System.out.println("[7]  ESTADO DAS MESAS DE VOTO");
+					System.out.println("[8]  MOSTRAR ELEITORES EM TEMPO REAL");
+					System.out.println("[9]  TERMINAR ELEICAO");
+					System.out.println("[10] RESULTADOS");
+					System.out.print("\nINSIRA O ID DA OPERACAO A EXECUTAR: ");
+					option = Integer.parseInt(reader.readLine());
+					switch(option){
+						case 0:
+							server.print_on_ServerRMI("ADMINISTRADOR DESCONECTADO");
+							break;
+						case 1:
+							System.out.println("\n=============REGISTAR ELEITOR=============\n");
+							registarEleitor(server);
+							System.out.println("\n==========================================\n");
+							break;
+						case 2:
+							System.out.println("\n==============CRIAR ELEICAO===============\n");
+							criarEleicao(server);
+							System.out.println("\n==========================================\n");
+							break;
+						case 3:
+							System.out.println("\n========GERIR LISTAS DE CANDIDATOS========\n");
+							
+							System.out.println("\n==========================================\n");
+							break;
+						case 4:
+							System.out.println("\n===========GERIR MESAS DE VOTO============\n");
+							
+							System.out.println("\n==========================================\n");
+							break;
+						case 5:
+							System.out.println("\n===ALTERAR PROPRIEDADES DE UMA ELEICAO====\n");
+							
+							System.out.println("\n==========================================\n");
+							break;
+						case 6:
+							System.out.println("\n===========ONDE VOTOU O ELEITOR===========\n");
+							
+							System.out.println("\n==========================================\n");
+							break;
+						case 7:
+							System.out.println("\n=========ESTADO DAS MESAS DE VOTO=========\n");
+							
+							System.out.println("\n==========================================\n");
+							break;
+						case 8:
+							System.out.println("\n=====MOSTRAR ELEITORES EM TEMPO REAL======\n");
+							
+							System.out.println("\n==========================================\n");
+							break;
+						case 9:
+							System.out.println("\n============TERMINAR ELEICAO==============\n");
+							
+							System.out.println("\n==========================================\n");
+							break;
+						case 10:
+							System.out.println("\n===============RESULTADOS=================\n");
+							
+							System.out.println("\n==========================================\n");
+							break;
+
+					}
+				}catch(IOException e){
+					System.out.println(e);
 				}
 			}
 

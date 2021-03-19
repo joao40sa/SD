@@ -1,4 +1,6 @@
-class Pessoa{
+import java.io.Serializable;
+
+class Pessoa implements Serializable{
 
 	private String nome;
 	private String password;
@@ -18,5 +20,10 @@ class Pessoa{
 		this.morada = morada;
 		this.numero = numero;
 		this.validade_cc = validade_cc;
+	}
+
+	public int getNumero()
+	{
+		return this.numero;
 	}
 }
