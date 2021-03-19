@@ -1,4 +1,5 @@
 import java.rmi.*;
+import java.util.ArrayList;
 
 public interface ServerRMI_Interface extends Remote {
 	
@@ -10,5 +11,5 @@ public interface ServerRMI_Interface extends Remote {
 
 	public boolean registarEleicao(Eleicao e) throws java.rmi.RemoteException;
 
-	public boolean adicionaCandidatura(String nomeEleicao, ArrayList<Pessoa> lista) throws java.rmi.RemoteException;
+	public boolean adicionaCandidatura(String nomeEleicao, ListaCandidatos lista) throws java.rmi.RemoteException;
 }
