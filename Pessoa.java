@@ -28,4 +28,12 @@ class Pessoa implements Serializable{
 	{
 		return this.numero;
 	}
+
+	public String getTipo(){
+		return this.tipo;
+	}
+
+	public String toString(){
+		return "TIPO: "+this.tipo+"\nNOME: "+this.nome+"\nNUMERO: "+this.numero;
+	}
 }

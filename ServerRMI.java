@@ -55,7 +55,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 		if(add)	{
 			eleitores.add(p);
-			System.out.println("PESSOA COM NUM: " + p.getNumero() + " REGISTADA COM SUCESSO");
+			System.out.println("[NOVO REGISTO] "+p.getTipo()+" COM NUMERO: " +p.getNumero());
 		}
 		return add;
 	}
