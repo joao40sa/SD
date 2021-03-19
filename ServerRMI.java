@@ -102,12 +102,11 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 		return add;
 	}
 
-	public boolean adicionaCandidatura(String nomeEleicao, ArrayList<Pessoa> lista) throws java.rmi.RemoteException	{//FALTA MELHORAR, é preciso fazer verificação se os candidatos pertencem ao cargo certo
+	public boolean adicionaCandidatura(String nomeEleicao, ListaCandidatos lista) throws java.rmi.RemoteException	{//FALTA MELHORAR, é preciso fazer verificação se os candidatos pertencem ao cargo certo
 		for(int i=0; i<eleicoes.size(); i++){
-			if(eleicoes.get(i).getTitulo == nomeEleicao)
+			if(eleicoes.get(i).getTitulo() == nomeEleicao)
 			{
-				eleicoes.get(i).add(lista);
-				return true;
+				return eleicoes.get(i).addListaCandidatos(lista);
 			}
 		}
 		return false;
