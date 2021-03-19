@@ -26,7 +26,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 	/*===============*/
 
 	public static void registarEleitor(ServerRMI_Interface server)	{
-		String nome, password, departamento, faculdade, contacto, morada, validade_cc, funcao;
+		String nome, password, departamento, faculdade, contacto, morada, validade_cc, funcao, tipo = null;
 		int numero, opt;
 		InputStreamReader input = new InputStreamReader(System.in);
 		BufferedReader reader = new BufferedReader(input);
@@ -53,29 +53,20 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 
 			switch(opt){
 				case 1:
-					if(server.registarEstudante(new Estudante(nome, password, departamento, faculdade, contacto, morada, numero, validade_cc))){
-						System.out.println("\nREGISTO COM SUCESSO");
-					}
-					else{
-						System.out.println("\n[ERRO NO REGISTO]  JA EXISTE UM REGISTO DE ESTUDANTE COM O NUMERO: " +numero);
-					}
+					tipo = "ESTUDANTE";
 					break;
 				case 2:
-					if(server.registarDocente(new Docente(nome, password, departamento, faculdade, contacto, morada, numero, validade_cc))){
-						System.out.println("\nREGISTO COM SUCESSO");
-					}
-					else{
-						System.out.println("\n[ERRO NO REGISTO]  JA EXISTE UM REGISTO DE DOCENTE COM O NUMERO: " +numero);
-					}
+					tipo = "DOCENTE";
 					break;
 				case 3:
-					if(server.registarFuncionario(new Funcionario(nome, password, departamento, faculdade, contacto, morada, numero, validade_cc))){
-						System.out.println("\nREGISTO COM SUCESSO");
-					}
-					else{
-						System.out.println("\n[ERRO NO REGISTO]  JA EXISTE UM REGISTO DE FUNCIONARIO COM O NUMERO: " +numero);
-					}
+					tipo = "FUNCIONARIO";
 					break;
+			}
+			if(server.registarPessoa(new Pessoa(nome, password, departamento, faculdade, contacto, morada, numero, validade_cc,tipo))){
+				System.out.println("\nREGISTO COM SUCESSO");
+			}
+			else{
+				System.out.println("\n[ERRO NO REGISTO]  JA EXISTE UM REGISTO DE PESSOA COM O NUMERO: " +numero);
 			}
 		}catch(IOException e1)		{
 			System.out.println(e1);
@@ -83,7 +74,8 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 	}
 
 	public static void criarEleicao(ServerRMI_Interface server) {
-		String s_data_inicio, s_data_fim, titulo, descricao;
+		String s_data_inicio, s_data_fim, titulo, descricao, restPessoa = null, restDep = null, existRest, existRestPess, existRestDep;
+		int escolhaEleitor;
 		Date data_inicio, data_fim;
 		Eleicao e;
 		InputStreamReader input = new InputStreamReader(System.in);
@@ -101,8 +93,35 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 			System.out.print("DATA FIM [dd-mm-aaaa hh:mm:ss]: ");
 			s_data_fim = reader.readLine();
 			data_fim = formatter.parse(s_data_fim);
+			System.out.print("EXISTE ALGUMA RESTRICAO [s/n]? ");
+			existRest = reader.readLine();
+			if(existRest.matches("s")){
+				System.out.print("EXISTE RESTRICAO QUANTO AO DEPARTAMENTO [s/n]? ");
+				existRestDep = reader.readLine();
+				if(existRestDep.matches("s")){
+					System.out.print("DEPARTAMENTO ONDE IRA OCORRER A ELEICAO: ");
+					restDep = reader.readLine();
+				}
+				System.out.print("EXISTE RESTRICAO QUANTO AO TIPO DE ELEITOR [s/n]? ");
+				existRestPess = reader.readLine();
+				if(existRestDep.matches("s")){
+					System.out.print("TIPO DE ELEITOR [1-ESTUDANTE][2-DOCENTE][3-FUNCIONARIO]: ");
+					escolhaEleitor = Integer.parseInt(reader.readLine());
+					switch(escolhaEleitor){
+						case 1:
+							restPessoa = "ESTUDANTE";
+							break;
+						case 2:
+							restPessoa = "DOCENTE";
+							break;
+						case 3:
+							restPessoa = "FUNCIONARIO";
+							break;
+					}
+				}
+			}
 
-			if(server.registarEleicao(new Eleicao(titulo, descricao, data_inicio, data_fim))){
+			if(server.registarEleicao(new Eleicao(titulo, descricao, data_inicio, data_fim, restPessoa, restDep))){
 				System.out.println("\nELEICAO CRIADA COM SUCESSO");
 			}
 			else{

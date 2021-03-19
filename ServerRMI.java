@@ -9,79 +9,19 @@ import java.rmi.registry.Registry;
 public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interface{
 
 	private int REG_PORT = 7000;
-	private ArrayList<Estudante> estudantes;
-	private ArrayList<Docente> docentes;
-	private ArrayList<Funcionario> funcionarios;
 	private ArrayList<Eleicao> eleicoes;
+	private ArrayList<Pessoa> eleitores;
 
 	public ServerRMI() throws RemoteException{
 		super();
-		estudantes = new ArrayList<Estudante>();
-		docentes = new ArrayList<Docente>();
-		funcionarios = new ArrayList<Funcionario>();
 		eleicoes = new ArrayList<Eleicao>();
+		eleitores = new ArrayList<Pessoa>();
 	}
 
 	/*MÉTODOS REMOTOS*/
 	
 	public void print_on_ServerRMI(String s) throws java.rmi.RemoteException	{
 		System.out.println(s);
-	}
-
-	public boolean registarEstudante(Estudante p) throws java.rmi.RemoteException	{
-		boolean add = true;
-		for(int i=0; i<estudantes.size(); i++)	{
-			if(estudantes.get(i).getNumero() == p.getNumero())
-			{
-				System.out.println("[ERRO]  ESTUDANTE COM NUM: " + p.getNumero() + " JA SE ENCONTRA REGISTADO");
-				add = false;
-				break;
-			}
-		}
-
-		if(add)	{
-			estudantes.add(p);
-			System.out.println("ESTUDANTE COM NUM: " + p.getNumero() + " REGISTADO SUCESSO");
-		}
-		return add;
-	}
-
-	public boolean registarDocente(Docente p) throws java.rmi.RemoteException	{
-		boolean add = true;
-
-		for(int i=0; i<docentes.size(); i++){
-			if(docentes.get(i).getNumero() == p.getNumero())
-			{
-				System.out.println("[ERRO]  DOCENTE COM NUM: " + p.getNumero() + " JA SE ENCONTRA REGISTADO");
-				add = false;
-				break;
-			}
-		}
-
-		if(add)	{
-			docentes.add(p);
-			System.out.println("DOCENTE COM NUM: " + p.getNumero() + " REGISTADO SUCESSO");
-		}
-		return add;
-	}
-
-	public boolean registarFuncionario(Funcionario p) throws java.rmi.RemoteException	{
-		boolean add = true;
-
-		for(int i=0; i<funcionarios.size(); i++) {
-			if(funcionarios.get(i).getNumero() == p.getNumero())
-			{
-				System.out.println("[ERRO]  FUNCIONARIO COM NUM: " + p.getNumero() + " JA SE ENCONTRA REGISTADO");
-				add = false;
-				break;
-			}
-		}
-
-		if(add)	{
-			funcionarios.add(p);
-			System.out.println("FUNCIONARIO COM NUM: " + p.getNumero() + " REGISTADO SUCESSO");
-		}
-		return add;
 	}
 
 	public boolean registarEleicao(Eleicao e) throws java.rmi.RemoteException   {
@@ -97,7 +37,25 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 		if(add){
 			eleicoes.add(e);
-			System.out.println("ELEICAO COM O TITULO: "+ e.getTitulo() + " CRIADA COM SUCESSO");
+			System.out.println(e);
+		}
+		return add;
+	}
+
+	public boolean registarPessoa(Pessoa p) throws java.rmi.RemoteException{
+		boolean add = true;
+		for(int i=0; i<eleitores.size(); i++)	{
+			if(eleitores.get(i).getNumero() == p.getNumero())
+			{
+				System.out.println("[ERRO]  PESSOA COM NUM: " + p.getNumero() + " JA SE ENCONTRA REGISTADA");
+				add = false;
+				break;
+			}
+		}
+
+		if(add)	{
+			eleitores.add(p);
+			System.out.println("PESSOA COM NUM: " + p.getNumero() + " REGISTADA COM SUCESSO");
 		}
 		return add;
 	}

@@ -10,8 +10,9 @@ class Pessoa implements Serializable{
 	private String morada;
 	private int numero;
 	private String validade_cc;
+	private String tipo;
 
-	public Pessoa(String nome, String password, String departamento, String faculdade, String contacto, String morada, int numero, String validade_cc){
+	public Pessoa(String nome, String password, String departamento, String faculdade, String contacto, String morada, int numero, String validade_cc, String tipo){
 		this.nome = nome;
 		this.password = password;
 		this.departamento = departamento;
@@ -20,6 +21,7 @@ class Pessoa implements Serializable{
 		this.morada = morada;
 		this.numero = numero;
 		this.validade_cc = validade_cc;
+		this.tipo = tipo;
 	}
 
 	public int getNumero()
