@@ -34,6 +34,30 @@ class Eleicao implements Serializable{
 		return true;
 	}
 
+	public void setDescricao(String new_descricao){
+		this.descricao = new_descricao;
+	}
+
+	public void setTitulo(String new_titulo){
+		this.titulo = new_titulo;
+	}
+
+	public void setDataFim(Date new_data_fim){
+		this.data_fim = new_data_fim;
+	}
+
+	public void setDataInicio(Date new_data_inicio){
+		this.data_inicio = new_data_inicio;
+	}
+
+	public Date getDataInicio(){
+		return this.data_inicio;
+	}
+
+	public Date getDataFim(){
+		return this.data_fim;
+	}
+
 	public String getTitulo(){
 		return this.titulo;
 	}

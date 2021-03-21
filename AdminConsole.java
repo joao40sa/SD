@@ -2,6 +2,7 @@ import java.rmi.*;
 import java.rmi.server.*;
 import java.net.*;
 import java.io.*;
+import java.util.*;
 import java.util.ArrayList;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -25,7 +26,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 	
 	/*===============*/
 
-	public static void registarEleitor(ServerRMI_Interface server)	{
+	private static void registarEleitor(ServerRMI_Interface server)	{
 		String nome, password, departamento, faculdade, contacto, morada, validade_cc, funcao, tipo = null;
 		int numero, opt;
 		InputStreamReader input = new InputStreamReader(System.in);
@@ -73,7 +74,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 		}
 	}
 
-	public static void criarEleicao(ServerRMI_Interface server) {
+	private static void criarEleicao(ServerRMI_Interface server) {
 		String s_data_inicio, s_data_fim, titulo, descricao, restPessoa = null, restDep = null, existRest, existRestPess, existRestDep;
 		int escolhaEleitor;
 		Date data_inicio, data_fim;
@@ -133,6 +134,93 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 		} catch(IOException e2)		{
 			System.out.println(e2);
 		}
+	}
+
+	private static void alterarDadosEleicao(ServerRMI_Interface server) {
+		int auxData;
+		String alterar, nomeEleicao, newNome = null, newDescricao = null, s_data_inicio, s_data_fim;
+		Date newDataInicio = null, newDataFim = null;
+		Date dataAtual = Calendar.getInstance().getTime();
+		InputStreamReader input = new InputStreamReader(System.in);
+		BufferedReader reader = new BufferedReader(input);
+		SimpleDateFormat formatter=new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+		
+		try{
+			System.out.print("TITULO DA ELEICAO A ALTERAR: ");
+			nomeEleicao = reader.readLine();
+
+			System.out.print("ALTERAR TITULO DA ELEICAO [s/n]? ");
+			alterar = reader.readLine();
+			if(alterar.matches("s")){
+				System.out.print("NOVO TITULO: ");
+				newNome = reader.readLine();
+			}
+
+			System.out.print("ALTERAR DESCRICAO DA ELEICAO [s/n]? ");
+			alterar = reader.readLine();
+			if(alterar.matches("s")){
+				System.out.print("NOVA DESCRICAO: ");
+				newDescricao = reader.readLine();
+			}
+
+			System.out.print("ALTERAR DATA DE INICIO [s/n]? ");
+			alterar = reader.readLine();
+			if(alterar.matches("s")){
+				auxData = -1;
+				while(auxData<0){
+					System.out.print("NOVA DATA DE INICIO [dd-mm-aaaa hh:mm:ss]: ");
+					s_data_inicio = reader.readLine();
+					newDataInicio = formatter.parse(s_data_inicio);
+					if(dataAtual.compareTo(newDataInicio) < 0){
+						auxData = 1;
+					}
+					else{
+						System.out.println("DATA INVALIDA: A NOVA DATA DEVE SER POSTERIOR A DATA ATUAL");
+					}
+				}
+			}
+
+			System.out.print("ALTERAR DATA DE FIM [s/n]? ");
+			alterar = reader.readLine();
+			if(alterar.matches("s")){
+				auxData = -1;
+				while(auxData<0){
+					System.out.print("NOVA DATA DE FIM [dd-mm-aaaa hh:mm:ss]: ");
+					s_data_fim = reader.readLine();
+					newDataFim = formatter.parse(s_data_fim);
+					if(dataAtual.compareTo(newDataFim) < 0){
+						auxData = 1;
+					}
+					else{
+						auxData = -1;
+						System.out.println("DATA INVALIDA: A NOVA DATA DEVE SER POSTERIOR A DATA ATUAL");
+					}
+					if(newDataInicio != null && auxData != -1)
+					{
+						if(newDataFim.compareTo(newDataInicio) > 0){
+							auxData = 1;
+						}
+						else{
+							System.out.println("DATA INVALIDA: A NOVA DATA DEVE SER POSTERIOR A DATA DE INICIO");
+							auxData = -1;
+						}
+					}
+				}
+			}
+
+			if(server.alterarEleicao(nomeEleicao, newNome, newDescricao, newDataInicio, newDataFim)){
+				System.out.println("ELEICAO ALTERADA COM SUCESSO");
+			}
+			else{
+				System.out.println("ERRO AO ALTERAR ELEICAO");
+			}
+
+		} catch(IOException e3){
+			System.out.println(e3);
+		} catch(ParseException p3){
+			System.out.println(p3);
+		}
+		
 	}
 
 	public static void main(String args[]) {
@@ -197,7 +285,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 							break;
 						case 5:
 							System.out.println("\n===ALTERAR PROPRIEDADES DE UMA ELEICAO====\n");
-							
+							alterarDadosEleicao(server);
 							System.out.println("\n==========================================\n");
 							break;
 						case 6:
