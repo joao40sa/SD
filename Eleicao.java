@@ -24,13 +24,26 @@ class Eleicao implements Serializable{
 	}
 
 	public boolean addListaCandidatos(ListaCandidatos lista){
-		boolean add = true;
 		for(int i=0; i<this.lista_candidatos.size(); i++){
-			if(this.lista_candidatos.get(i).getNome() == lista.getNome()){
+			if(this.lista_candidatos.get(i).getNome().equals(lista.getNome())){
 				return false;
 			}
 		}
 		this.lista_candidatos.add(lista);
+		return true;
+	}
+
+	public boolean removeListaCandidatos(String nome){
+		int ind = -1;
+		for(int i=0; i<this.lista_candidatos.size(); i++){
+			if(this.lista_candidatos.get(i).getNome().equals(nome)){
+				ind = i;
+				break;
+			}
+		}
+		if(ind == -1)
+			return false;
+		this.lista_candidatos.remove(ind);
 		return true;
 	}
 
@@ -60,6 +73,10 @@ class Eleicao implements Serializable{
 
 	public String getTitulo(){
 		return this.titulo;
+	}
+
+	public String getRestricaoTipo(){
+		return this.restPessoa;
 	}
 
 	public String toString(){
