@@ -87,6 +87,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
             e.printStackTrace();
         }
 		return null;
+	}
 	
 	
 	public void print_on_ServerRMI(String s) throws java.rmi.RemoteException	{
