@@ -9,12 +9,24 @@ import java.rmi.registry.Registry;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
+//Imports FILE===============================
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+//============================================
+
 public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interface{
 
 	private int REG_PORT = 7000;
 	private static int UDP_PORT = 6000;
 	private ArrayList<Eleicao> eleicoes;
 	private ArrayList<Pessoa> eleitores;
+	private ArrayList<Pessoa> arrayPessoas;
 	private static ServerRMI server;
 	private static Registry reg;
 
@@ -22,9 +34,60 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 		super();
 		eleicoes = new ArrayList<Eleicao>();
 		eleitores = new ArrayList<Pessoa>();
+		File f = new File("database.obj");
+		if(f.exists() && !f.isDirectory()) { 
+			arrayPessoas = readFile();
+		}
+		else{
+			arrayPessoas = new ArrayList<Pessoa>();
+		}
 	}
 
 	/*MÉTODOS REMOTOS*/
+	
+	public void adicionaArrayPessoas(Pessoa p){					
+		arrayPessoas.add(p);
+
+	}
+	public void writeToFile(){
+		System.out.println("################# WRITE ###################");						
+		try{
+            FileOutputStream writeData = new FileOutputStream("database.obj");
+            ObjectOutputStream writeStream = new ObjectOutputStream(writeData);
+
+            writeStream.writeObject(arrayPessoas);
+            writeStream.flush();
+            writeStream.close();
+
+        }catch (IOException e) {
+            e.printStackTrace();
+        } 
+	}
+
+
+	public ArrayList<Pessoa> readFile(){
+		System.out.println("################# READ ###################");
+		try{
+			FileInputStream readData = new FileInputStream("database.obj");
+            ObjectInputStream readStream = new ObjectInputStream(readData);
+
+            ArrayList people2 = (ArrayList<Pessoa>) readStream.readObject();
+            readStream.close();
+
+            System.out.println(people2.toString());
+			return (people2);
+			
+		
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found");
+        } catch (IOException e) {
+            System.out.println("Error initializing stream");
+        } catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+		return null;
+	
 	
 	public void print_on_ServerRMI(String s) throws java.rmi.RemoteException	{
 		System.out.println(s);
@@ -105,7 +168,9 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 		if(add)	{
 			eleitores.add(p);
+			adicionaArrayPessoas(p);
 			System.out.println("[NOVO REGISTO] "+p.getTipo()+" COM NUMERO: " + p.getNumero());
+			writeToFile();
 		}
 		return add;
 	}
