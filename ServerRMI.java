@@ -26,55 +26,47 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	private static int UDP_PORT = 6000;
 	private ArrayList<Eleicao> eleicoes;
 	private ArrayList<Pessoa> eleitores;
-	private ArrayList<Pessoa> arrayPessoas;
 	private static ServerRMI server;
 	private static Registry reg;
 
 	public ServerRMI() throws RemoteException{
 		super();
 		eleicoes = new ArrayList<Eleicao>();
-		eleitores = new ArrayList<Pessoa>();
 		File f = new File("database.obj");
-		if(f.exists() && !f.isDirectory()) { 
-			arrayPessoas = readFile();
+		if(f.exists() && !f.isDirectory()) {
+			System.out.println("[DADOS CARREGADOS]  COMUNIDADE ACADEMICA"); 
+			eleitores = readFile();
 		}
 		else{
-			arrayPessoas = new ArrayList<Pessoa>();
+			eleitores = new ArrayList<Pessoa>();
 		}
 	}
 
-	/*MÉTODOS REMOTOS*/
-	
-	public void adicionaArrayPessoas(Pessoa p){					
-		arrayPessoas.add(p);
-
-	}
 	public void writeToFile(){
-		System.out.println("################# WRITE ###################");						
+		//System.out.println("################# WRITE ###################");						
 		try{
             FileOutputStream writeData = new FileOutputStream("database.obj");
             ObjectOutputStream writeStream = new ObjectOutputStream(writeData);
 
-            writeStream.writeObject(arrayPessoas);
+            writeStream.writeObject(eleitores);
             writeStream.flush();
             writeStream.close();
-
+            System.out.println("[DADOS ATUALIZADOS]");
         }catch (IOException e) {
             e.printStackTrace();
         } 
 	}
 
-
 	public ArrayList<Pessoa> readFile(){
-		System.out.println("################# READ ###################");
+		//System.out.println("################# READ ###################");
 		try{
 			FileInputStream readData = new FileInputStream("database.obj");
             ObjectInputStream readStream = new ObjectInputStream(readData);
 
-            ArrayList people2 = (ArrayList<Pessoa>) readStream.readObject();
+            ArrayList<Pessoa> people2 = (ArrayList<Pessoa>) readStream.readObject();
             readStream.close();
 
-            System.out.println(people2.toString());
+            //System.out.println(people2.toString());
 			return (people2);
 			
 		
@@ -88,9 +80,11 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
         }
 		return null;
 	}
-	
-	
-	public void print_on_ServerRMI(String s) throws java.rmi.RemoteException	{
+
+
+	/*MÉTODOS REMOTOS*/
+
+	public void print_on_ServerRMI(String s) throws java.rmi.RemoteException{
 		System.out.println(s);
 	}
 
@@ -169,7 +163,6 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 		if(add)	{
 			eleitores.add(p);
-			adicionaArrayPessoas(p);
 			System.out.println("[NOVO REGISTO] "+p.getTipo()+" COM NUMERO: " + p.getNumero());
 			writeToFile();
 		}
@@ -227,21 +220,6 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 
 	/*=====================*/
-	private Date getDataAtual(){
-		try{
-			SimpleDateFormat formatter=new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-			Date today = Calendar.getInstance().getTime();
-			String s_data;
-		    s_data = formatter.format(today);
-		    today = formatter.parse(s_data);
-		    //System.out.println(today);
-
-		    return today;
-		} catch(ParseException p1){
-			System.out.println(p1);
-		}
-		return null;
-	}
 
 
 	private static void primarySide(){
