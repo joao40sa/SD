@@ -37,8 +37,18 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 			opt = Integer.parseInt(reader.readLine());
 			System.out.print("NOME: ");
 			nome = reader.readLine();
-			System.out.print("CODIGO: ");
+			while(nome.contains(";") || nome.contains("|")){
+				System.out.print("Nao pode conter caracteres (; , |)\n");
+				System.out.print("NOME: ");
+				nome = reader.readLine();
+			}
+			System.out.print("PASSWORD: ");
 			password = reader.readLine();
+			while(password.contains(";") || password.contains("|")){
+				System.out.print("Nao pode conter caracteres (; , |)\n");
+				System.out.print("PASSWORD: ");
+				password = reader.readLine();
+			}
 			System.out.print("FACULDADE: ");
 			faculdade = reader.readLine();
 			System.out.print("DEPARTAMENTO: ");
