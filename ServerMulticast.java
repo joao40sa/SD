@@ -1,27 +1,57 @@
 import java.net.MulticastSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.io.IOException;
-import java.util.Scanner;
-
+import java.io.*;
+import java.util.*;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.ArrayList;
 
 class ServerMulticast extends Thread{
 
-	private String MULTICAST_ADDRESS_CLIENTS = "224.0.224.0";
+	private String MULTICAST_DESCOBRIR;
+    private String MULTICAST_COMUNICAR;
     private int PORT = 4321;
+    private String departamento;
 
-    public ServerMulticast() {
+    public ServerMulticast(String departamento, String grupoDescobrir, String grupoComunicar) {
         super("User " + (long) (Math.random() * 1000));
+        this.departamento = departamento;
+        this.MULTICAST_DESCOBRIR = grupoDescobrir;
+        this.MULTICAST_COMUNICAR = grupoComunicar;
     }
 
+
+
     public static void main(String[] args) {
-        ServerMulticast server = new ServerMulticast();
-        server.start();
+        String departamento;
+        InputStreamReader input = new InputStreamReader(System.in);
+        BufferedReader reader = new BufferedReader(input);
+        ArrayList<String> gruposMulticast;
+
+        try{
+            ServerRMI_Interface server = (ServerRMI_Interface) LocateRegistry.getRegistry(7000).lookup("ServerRMI");
+            System.out.print("LOCALIZACAO DA MESA: ");
+            departamento = reader.readLine();
+            if(server.abreMesaVoto(departamento)){
+                gruposMulticast = server.getGruposMulticast(departamento);
+                
+                ServerMulticast mesa = new ServerMulticast(departamento, gruposMulticast.get(0), gruposMulticast.get(1));
+
+                mesa.start();
+            }
+            else{
+                System.out.println("[IMPOSSIVEL ABRIR MESA DE VOTO]  JA EXISTE UMA MESA NESTE DEPARTAMENTO");
+            }
+        } catch(Exception e){
+            System.out.println("Exception no main: "+e);
+        }
+        
     }
 
     public void run() {
         MulticastSocket socket = null;
-        System.out.println(this.getName() + " ready...");
+        System.out.println("Mesa de voto: "+ this.departamento + " ready...");
         try {
             socket = new MulticastSocket();  // create socket without binding it (only for sending)
             Scanner keyboardScanner = new Scanner(System.in);
@@ -29,7 +59,7 @@ class ServerMulticast extends Thread{
                 String readKeyboard = keyboardScanner.nextLine();
                 byte[] buffer = readKeyboard.getBytes();
 
-                InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS_CLIENTS);
+                InetAddress group = InetAddress.getByName(MULTICAST_DESCOBRIR);
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
                 socket.send(packet);
             }
@@ -39,5 +69,4 @@ class ServerMulticast extends Thread{
             socket.close();
         }
     }
-
 }

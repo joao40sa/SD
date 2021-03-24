@@ -13,4 +13,7 @@ public interface ServerRMI_Interface extends Remote {
 
 	public boolean adicionaCandidatura(String nomeEleicao, String nomeCandidatura, ArrayList<Integer> lista) throws java.rmi.RemoteException;
 	public boolean removeCandidatura(String nomeEleicao, String nomeCandidatura) throws java.rmi.RemoteException;
+
+	public boolean abreMesaVoto(String departamentoMesa) throws java.rmi.RemoteException;
+	public ArrayList<String> getGruposMulticast(String departamentoMesa) throws java.rmi.RemoteException; 
 }

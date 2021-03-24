@@ -7,19 +7,30 @@ import java.util.Scanner;
 
 class VotingTerminal extends Thread{
 
-	private String MULTICAST_ADDRESS = "224.0.224.0";
+	private String MULTICAST_DESCOBRIR;
+    private String MULTICAST_COMUNICAR;
     private int PORT = 4321;
 
+    public VotingTerminal(String grupoDescobrir){
+        this.MULTICAST_DESCOBRIR = grupoDescobrir;
+    }
+
     public static void main(String[] args) {
-        VotingTerminal terminal = new VotingTerminal();
-        terminal.start();
+        if(args.length > 0){
+            VotingTerminal terminal = new VotingTerminal(args[0]);
+            terminal.start();
+        }
+        else{
+            System.out.println("FALTOU ESPECIFICAR O GRUPO MULTICAST PARA DESCOBERTA");
+        }
+        
     }
 
     public void run() {
         MulticastSocket socket = null;
         try {
             socket = new MulticastSocket(PORT);  // create socket and bind it
-            InetAddress group = InetAddress.getByName(MULTICAST_ADDRESS);
+            InetAddress group = InetAddress.getByName(MULTICAST_DESCOBRIR);
             socket.joinGroup(group);
             while (true) {
                 byte[] buffer = new byte[256];
@@ -36,5 +47,4 @@ class VotingTerminal extends Thread{
             socket.close();
         }
     }
-
 }

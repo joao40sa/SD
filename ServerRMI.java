@@ -27,13 +27,19 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	private ArrayList<Eleicao> eleicoes;
 	private ArrayList<Pessoa> eleitores;
 	private static ServerRMI server;
+	private ArrayList<String> mesasVotoAbertas; //são as mesas que já estão abertas, no maximo existe uma por departamento
+	private String[] departamentos = {"DEI", "DEEC", "DEM", "DEC", "DEQ"};
+	private String[][] gruposMulticastDepartamento = {   {"225.0.0.0","225.0.0.1"},
+														 {"226.0.0.0","226.0.0.1"},
+														 {"227.0.0.0","227.0.0.1"},
+													     {"228.0.0.0","228.0.0.1"},
+														 {"229.0.0.0","229.0.0.1"}}; 
 	private static Registry reg;
 
 	public ServerRMI() throws RemoteException{
 		super();
-		eleicoes = new ArrayList<Eleicao>();
 		File f = new File("database.obj");
-		File f1 = new File("databaseEleicoes.obj");
+		File f1 = new File("databaseEleicoes.obj");	
 		if(f.exists() && !f.isDirectory()) {
 			System.out.println("[DADOS CARREGADOS]  COMUNIDADE ACADEMICA"); 
 			eleitores = readFile();
@@ -42,16 +48,18 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 			eleitores = new ArrayList<Pessoa>();
 		}
 		if(f1.exists() && !f1.isDirectory()) {
-			System.out.println("[DADOS CARREGADOS ELEICOES]"); 
+			System.out.println("[DADOS CARREGADOS]  ELEICOES"); 
 			eleicoes = readFileEleicao();
 		}
 		else{
 			eleicoes = new ArrayList<Eleicao>();
 		}
+
+		mesasVotoAbertas = new ArrayList<String>();
 	}
 
 	public void writeToFile(int param){ //eleitores = 0     eleições = 1
-		System.out.println("################# WRITE ###################");						
+		//System.out.println("################# WRITE ###################");						
 		try{
 			if(param == 0){
 				FileOutputStream writeData = new FileOutputStream("database.obj");
@@ -127,6 +135,31 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	//=====================================================================
 
 	/*MÉTODOS REMOTOS*/
+	public ArrayList<String> getGruposMulticast(String departamentoMesa) throws java.rmi.RemoteException {
+		int ind = 0;
+		ArrayList<String> grupos = new ArrayList<String>();
+		for(int i=0; i<departamentos.length; i++){
+			if(departamentos[i].equals(departamentoMesa)){
+				ind = i;
+				break;
+			}
+		}
+		grupos.add(gruposMulticastDepartamento[ind][0]);
+		grupos.add(gruposMulticastDepartamento[ind][1]);
+		return grupos;
+	}
+
+
+	public boolean abreMesaVoto(String departamentoMesa) throws java.rmi.RemoteException {
+		//se já existe uma mesa de voto no departamento não é possivel abri uma nova
+		for(int i=0; i<mesasVotoAbertas.size(); i++){
+			if(mesasVotoAbertas.get(i).equals(departamentoMesa))
+				return false;
+		}
+		//se não exisitr abrimos a mesa
+		mesasVotoAbertas.add(departamentoMesa);
+		return true;
+	}
 
 	public void print_on_ServerRMI(String s) throws java.rmi.RemoteException{
 		System.out.println(s);
