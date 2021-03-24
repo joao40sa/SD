@@ -33,12 +33,20 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 		super();
 		eleicoes = new ArrayList<Eleicao>();
 		File f = new File("database.obj");
+		File f1 = new File("databaseEleicoes.obj");
 		if(f.exists() && !f.isDirectory()) {
 			System.out.println("[DADOS CARREGADOS]  COMUNIDADE ACADEMICA"); 
 			eleitores = readFile();
 		}
 		else{
 			eleitores = new ArrayList<Pessoa>();
+		}
+		if(f1.exists() && !f1.isDirectory()) {
+			System.out.println("[DADOS CARREGADOS ELEICOES]"); 
+			eleicoes = readFileEleicao();
+		}
+		else{
+			eleicoes = new ArrayList<Eleicao>();
 		}
 	}
 
@@ -50,6 +58,14 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 				ObjectOutputStream writeStream = new ObjectOutputStream(writeData);
 
 				writeStream.writeObject(eleitores);
+				writeStream.flush();
+				writeStream.close();
+			}
+			if(param == 1){
+				FileOutputStream writeData = new FileOutputStream("databaseEleicoes.obj");
+				ObjectOutputStream writeStream = new ObjectOutputStream(writeData);
+
+				writeStream.writeObject(eleicoes);
 				writeStream.flush();
 				writeStream.close();
 			}
@@ -82,7 +98,33 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
         }
 		return null;
 	}
+	//Ler ficheiro de eleicoes ==========================================
 
+	public ArrayList<Eleicao> readFileEleicao(){
+		//System.out.println("################# READ ###################");
+		try{
+			FileInputStream readData = new FileInputStream("databaseEleicoes.obj");
+            ObjectInputStream readStream = new ObjectInputStream(readData);
+
+            ArrayList<Eleicao> el = (ArrayList<Eleicao>) readStream.readObject();
+            readStream.close();
+
+            System.out.println(el.toString());
+			return (el);
+			
+		
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found");
+        } catch (IOException e) {
+            System.out.println("Error initializing stream");
+        } catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+		return null;
+	}
+
+	//=====================================================================
 
 	/*MÉTODOS REMOTOS*/
 
@@ -105,6 +147,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 			eleicoes.add(e);
 			System.out.println("[NOVA ELEICAO] TITULO: "+e.getTitulo());
 			//System.out.println(e);
+			writeToFile(1);
 		}
 		return add;
 	}
@@ -166,7 +209,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 		if(add)	{
 			eleitores.add(p);
 			System.out.println("[NOVO REGISTO] "+p.getTipo()+" COM NUMERO: " + p.getNumero());
-			writeToFile();
+			writeToFile(0);
 		}
 		return add;
 	}
