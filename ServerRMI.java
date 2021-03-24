@@ -42,16 +42,18 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 		}
 	}
 
-	public void writeToFile(){
-		//System.out.println("################# WRITE ###################");						
+	public void writeToFile(int param){ //eleitores = 0     eleições = 1
+		System.out.println("################# WRITE ###################");						
 		try{
-            FileOutputStream writeData = new FileOutputStream("database.obj");
-            ObjectOutputStream writeStream = new ObjectOutputStream(writeData);
+			if(param == 0){
+				FileOutputStream writeData = new FileOutputStream("database.obj");
+				ObjectOutputStream writeStream = new ObjectOutputStream(writeData);
 
-            writeStream.writeObject(eleitores);
-            writeStream.flush();
-            writeStream.close();
-            System.out.println("[DADOS ATUALIZADOS]");
+				writeStream.writeObject(eleitores);
+				writeStream.flush();
+				writeStream.close();
+			}
+
         }catch (IOException e) {
             e.printStackTrace();
         } 
