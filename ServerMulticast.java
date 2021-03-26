@@ -131,7 +131,7 @@ class ServerMulticast extends Thread{
                 doSomething();
             }
             else{
-                System.out.println("[IMPOSSIVEL ABRIR MESA DE VOTO]  JA EXISTE UMA MESA NESTE DEPARTAMENTO");
+                System.out.println("[IMPOSSIVEL ABRIR MESA DE VOTO]");
             }
         } catch(Exception e){
             System.out.println("Exception no main: "+e);

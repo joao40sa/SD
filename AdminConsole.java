@@ -245,7 +245,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 		try{
 			System.out.println("[0]  VOLTAR");
 			System.out.println("[1]  ADICIONAR LISTA DE CANDIDATOS A UMA ELEICAO");
-			System.out.println("[2]  REMOVER LISTA DE CANDIDATOS A UMA ELEICAO");
+			System.out.println("[2]  REMOVER LISTA DE CANDIDATOS DE UMA ELEICAO");
 			System.out.print("ESCOLHA A OPCAO A REALIZAR: ");
 			opt = Integer.parseInt(reader.readLine());
 			switch(opt){
@@ -360,6 +360,67 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 		}
 	}
 
+	private static void gerirMesasVoto(ServerRMI_Interface server) throws java.rmi.ConnectException{
+		String nomeEleicao, nomeMesa;
+		int opt;
+		InputStreamReader input = new InputStreamReader(System.in);
+		BufferedReader reader = new BufferedReader(input);
+		try{
+			System.out.print("NOME ELEICAO: ");
+			nomeEleicao = reader.readLine();
+			System.out.print("NOME MESA [DEPARTAMENTO]: ");
+			nomeMesa = reader.readLine();
+			System.out.println("INTENCAO:");
+			System.out.println("	[1]  ADICIONAR MESA DE VOTO A UMA ELEICAO");
+			System.out.println("	[2]  REMOVER MESA DE VOTO DE UMA ELEICAO");
+			opt = Integer.parseInt(reader.readLine());
+			switch(opt){
+				case 1:
+					if(server.adicionaMesa(nomeEleicao, nomeMesa))
+						System.out.println("\nMESA ASSOCIADA COM SUCESSO");
+					else
+						System.out.println("\nERRO AO ASSOCIAR MESA");
+					break;
+				case 2:
+					if(server.removeMesa(nomeEleicao, nomeMesa))
+						System.out.println("\nMESA REMOVIDA COM SUCESSO");
+					else
+						System.out.println("\nERRO AO REMOVER MESA");
+					break;
+			}
+
+		}catch(java.rmi.ConnectException c){
+			throw c;
+		}catch(NumberFormatException  e){
+			System.out.println("OPCAO NAO RECONHECIDA");
+		}catch(IOException  i){
+			System.out.println("OPCAO NAO RECONHECIDA");
+		}
+	}
+
+	private static void mostarEstadoMesasVoto(ServerRMI_Interface server) throws java.rmi.ConnectException{
+		try{
+
+			ArrayList<String> mesas = server.getMesasVotoAbertas();
+			int tam = mesas.size();
+			if(tam>0){
+				System.out.println("AS MESAS ABERTAS SAO AS SEGUINTES");
+				for(int i=0; i<mesas.size(); i++){
+					System.out.println("	-"+mesas.get(i));
+				}
+			}
+			else{
+				System.out.println("NAO SE ENCONTRA NENHUMA MESA ABERTA");
+			}
+			
+
+		}catch(java.rmi.ConnectException c){
+			throw c;
+		}catch(IOException  i){
+			System.out.println("EXCECAO");
+		}
+	}
+
 	public static void main(String args[]) {
 
 		/* This might be necessary if you ever need to download classes:
@@ -416,7 +477,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 							break;
 						case 4:
 							System.out.println("\n===========GERIR MESAS DE VOTO============\n");
-							
+							gerirMesasVoto(server);
 							System.out.println("\n==========================================\n");
 							break;
 						case 5:
@@ -431,7 +492,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 							break;
 						case 7:
 							System.out.println("\n=========ESTADO DAS MESAS DE VOTO=========\n");
-							
+							mostarEstadoMesasVoto(server);
 							System.out.println("\n==========================================\n");
 							break;
 						case 8:

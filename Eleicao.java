@@ -9,6 +9,7 @@ class Eleicao implements Serializable{
 	private String titulo;
 	private String descricao;
 	private ArrayList<ListaCandidatos> lista_candidatos;
+	private ArrayList<String> mesas_voto;
 
 	private String restPessoa;
 	private String restDep; 
@@ -21,6 +22,7 @@ class Eleicao implements Serializable{
 		this.restDep = restDep;
 		this.restPessoa = restPessoa;
 		this.lista_candidatos = new ArrayList<>();
+		this.mesas_voto = new ArrayList<>();
 	}
 
 	public boolean addListaCandidatos(ListaCandidatos lista){
@@ -44,6 +46,30 @@ class Eleicao implements Serializable{
 		if(ind == -1)
 			return false;
 		this.lista_candidatos.remove(ind);
+		return true;
+	}
+
+	public boolean adicionaMesa(String nomeMesa){
+		for(int i=0; i<mesas_voto.size(); i++){
+			if(mesas_voto.get(i).equals(nomeMesa)){
+				return false;
+			}
+		}
+		mesas_voto.add(nomeMesa);
+		return true;
+	}
+
+	public boolean removeMesa(String nomeMesa){
+		int ind = -1;
+		for(int i=0; i<mesas_voto.size(); i++){
+			if(mesas_voto.get(i).equals(nomeMesa)){
+				ind = -1;
+				break;
+			}
+		}
+		if(ind==-1)
+			return false;
+		mesas_voto.remove(ind);
 		return true;
 	}
 

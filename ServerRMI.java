@@ -28,7 +28,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	private ArrayList<Pessoa> eleitores;
 	private static ServerRMI server;
 	private ArrayList<String> mesasVotoAbertas; //são as mesas que já estão abertas, no maximo existe uma por departamento
-	private String[] departamentos = {"DEI", "DEEC", "DEM", "DEC", "DEQ"};
+	private static String[] departamentos = {"DEI", "DEEC", "DEM", "DEC", "DEQ"};
 	private String[][] gruposMulticastDepartamento = {   {"225.0.0.0","225.0.0.1"},
 														 {"226.0.0.0","226.0.0.1"},
 														 {"227.0.0.0","227.0.0.1"},
@@ -152,13 +152,75 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 	public boolean abreMesaVoto(String departamentoMesa) throws java.rmi.RemoteException {
 		//se já existe uma mesa de voto no departamento não é possivel abri uma nova
-		for(int i=0; i<mesasVotoAbertas.size(); i++){
-			if(mesasVotoAbertas.get(i).equals(departamentoMesa))
-				return false;
+		if(existeMesa(departamentoMesa)){
+			for(int i=0; i<mesasVotoAbertas.size(); i++){
+				if(mesasVotoAbertas.get(i).equals(departamentoMesa)){
+					System.out.println("[ERRO ABRIR MESA] MESA "+departamentoMesa+" JA SE ENCONTRA ABERTA");
+					return false;
+				}
+			}
+			//se não exisitr abrimos a mesa
+			System.out.println("MESA "+departamentoMesa+" ABERTA COM SUCESSO");
+			mesasVotoAbertas.add(departamentoMesa);
+			return true;
 		}
-		//se não exisitr abrimos a mesa
-		mesasVotoAbertas.add(departamentoMesa);
-		return true;
+		else{
+			System.out.println("[ERRO ABRIR MESA] MESA "+departamentoMesa+" NAO EXISTE");
+			return false;
+		}
+		
+	}
+
+	public boolean adicionaMesa(String nomeEleicao, String nomeMesa) throws java.rmi.RemoteException {
+		if(existeMesa(nomeMesa)){
+			for(int i=0; i<eleicoes.size(); i++){
+				if(eleicoes.get(i).getTitulo().equals(nomeEleicao)){
+					if(eleicoes.get(i).adicionaMesa(nomeMesa)){
+						System.out.println("[SUCESSO ASSOCIAR MESA] MESA "+nomeMesa+" ASSOCIADA COM SUCESSO A ElEICAO "+nomeEleicao);
+						writeToFile(1);
+						return true;
+					}
+					else{
+						System.out.println("[ERRO ASSOCIAR MESA] MESA "+nomeMesa+" NAO SE ENCONTRA ASSOCIADA NA ElEICAO "+nomeEleicao);
+						return false;
+					}
+				}
+			}
+			System.out.println("[ERRO ASSOCIAR MESA] ELEICAO "+nomeEleicao+" NAO EXISTE");
+			return false;
+		}
+		else{
+			System.out.println("[ERRO ASSOCIAR MESA] MESA "+nomeMesa+" NAO EXISTE");
+			return false;
+		}
+	}
+
+	public boolean removeMesa(String nomeEleicao, String nomeMesa) throws java.rmi.RemoteException{
+		if(existeMesa(nomeMesa)){
+			for(int i=0; i<eleicoes.size(); i++){
+				if(eleicoes.get(i).getTitulo().equals(nomeEleicao)){
+					if(eleicoes.get(i).removeMesa(nomeMesa)){
+						System.out.println("[SUCESSO REMOVER MESA] MESA "+nomeMesa+" REMOVIDA COM SUCESSO A ElEICAO "+nomeEleicao);
+						writeToFile(1);
+						return true;
+					}
+					else{
+						System.out.println("[ERRO REMOVER MESA] MESA "+nomeMesa+" NAO SE ENCONTRA ASSOCIADA NA ElEICAO "+nomeEleicao);
+						return false;
+					}
+				}
+			}
+			System.out.println("[ERRO REMOVER MESA] ELEICAO "+nomeEleicao+" NAO EXISTE");
+			return false;
+		}
+		else{
+			System.out.println("[ERRO REMOVER MESA] MESA "+nomeMesa+" NAO EXISTE");
+			return false;
+		}
+	}
+
+	public ArrayList<String> getMesasVotoAbertas() throws java.rmi.RemoteException{
+		return mesasVotoAbertas;
 	}
 
 	public void print_on_ServerRMI(String s) throws java.rmi.RemoteException{
@@ -219,6 +281,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 					eleicoes.get(indEleicao).setDataFim(newDataFim);
 			}
 			System.out.println("[ELEICAO ALTERADA] "+eleicoes.get(indEleicao));
+			writeToFile(1);
 		}
 		else{
 			System.out.println("[ERRO ALTERAR ELEICAO] NAO EXISTE ELEICAO " + nomeEleicao);
@@ -284,13 +347,27 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 				return false;
 		}
 
-		return eleicoes.get(indEleicao).addListaCandidatos(new ListaCandidatos(nomeCandidatura, candidatos));
+		if(eleicoes.get(indEleicao).addListaCandidatos(new ListaCandidatos(nomeCandidatura, candidatos))){
+			System.out.println("CANDIDATURA ADICIONA COM SUCESSO");
+			writeToFile(1);
+			return true;
+		}
+		else{
+			return false;
+		}
 	}
 
 	public boolean removeCandidatura(String nomeEleicao, String nomeCandidatura) throws java.rmi.RemoteException{
 		for(int i=0; i<eleicoes.size(); i++){
 			if(eleicoes.get(i).getTitulo().equals(nomeEleicao)){
-				return eleicoes.get(i).removeListaCandidatos(nomeCandidatura); 
+				if(eleicoes.get(i).removeListaCandidatos(nomeCandidatura)){
+					System.out.println("CANDIDATURA REMOVIDA COM SUCESSO");
+					writeToFile(1);
+					return true;
+				}
+				else{
+					return false;
+				}
 			}
 		}
 		return false;
@@ -375,7 +452,13 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 
 
-
+	private static boolean existeMesa(String nomeMesa){
+		for(int i=0; i<departamentos.length; i++){
+			if(departamentos[i].equals(nomeMesa))
+				return true;
+		}
+		return false;
+	}
 
 
 
