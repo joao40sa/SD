@@ -22,7 +22,7 @@ class ServerMulticast extends Thread{
         this.MULTICAST_COMUNICAR = grupoComunicar;
     }
 
-    public static void doSomething(){
+    public static void doSomething(ServerRMI_Interface server){
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
         int opt;
@@ -32,12 +32,18 @@ class ServerMulticast extends Thread{
             while(true){
                 try{
                 System.out.println("[0]  DESBLOQUEIA TERMINAL");
+                System.out.println("[1]  IDENTIFICAR ELEITOR");
+                System.out.print("OPCAO:  ");
                 opt = Integer.parseInt(reader.readLine());
 
                 switch(opt){
                     case 0:
                         desbloqueiaTerminal();
                         break;
+                    case 1:
+                        identificarEleitor(server);
+                        break;
+
                 }
 
                 }catch(Exception e){
@@ -50,6 +56,25 @@ class ServerMulticast extends Thread{
         }finally{
         }
         
+    }
+
+    public static void identificarEleitor(ServerRMI_Interface server){
+        InputStreamReader input = new InputStreamReader(System.in);
+        BufferedReader reader = new BufferedReader(input);
+        int numero;
+        try{
+
+            System.out.print("NUMERO DE IDENTIFICACAO: ");
+            numero = Integer.parseInt(reader.readLine());
+            if(server.identificarEleitor(numero)){
+                System.out.println("IDENTIFICACAO CONCLUIDA COM SUCESSO");
+                desbloqueiaTerminal();
+            }
+
+
+        }catch(IOException e){
+            System.out.println("\nFORMATO DE DADOS INVALIDOS");
+        }
     }
 
     public static void desbloqueiaTerminal(){
@@ -91,7 +116,7 @@ class ServerMulticast extends Thread{
                             terminal = pares[1];
 
                             System.out.println("MANDA BLOQUEAR "+terminal);
-                            message = "type|setEstado;estado|OCUPADO;target|"+terminal;
+                            message = "type|setEstado;estado|OCUPADO;target|"+terminal+";group|"+MULTICAST_COMUNICAR;
                             buffer = message.getBytes();
 
                             packet = new DatagramPacket(buffer, buffer.length, group, PORT_DESCOBRIR);
@@ -127,8 +152,8 @@ class ServerMulticast extends Thread{
                 
                 ServerMulticast mesa = new ServerMulticast(departamento, gruposMulticast.get(0), gruposMulticast.get(1));
 
-                //mesa.start();// thread que vai comunicar com os terminais com eleitores la
-                doSomething();
+                mesa.start();// thread que vai comunicar com os terminais com eleitores la
+                doSomething(server);
             }
             else{
                 System.out.println("[IMPOSSIVEL ABRIR MESA DE VOTO]");
@@ -141,17 +166,19 @@ class ServerMulticast extends Thread{
 
     public void run() {
         MulticastSocket socket = null;
-        System.out.println("Mesa de voto: "+ this.departamento + " ready...");
         try {
             socket = new MulticastSocket();  // create socket without binding it (only for sending)
-            Scanner keyboardScanner = new Scanner(System.in);
             while (true) {
-                String readKeyboard = keyboardScanner.nextLine();
-                byte[] buffer = readKeyboard.getBytes();
+                byte[] buffer = "TESTE".getBytes();
 
                 InetAddress group = InetAddress.getByName(MULTICAST_COMUNICAR);
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT_COMUNICAR);
                 socket.send(packet);
+
+                try { 
+                    sleep((long) (Math.random() * 5000)); //5seg 
+                } catch (InterruptedException e) {
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

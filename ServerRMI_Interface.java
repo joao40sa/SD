@@ -21,4 +21,5 @@ public interface ServerRMI_Interface extends Remote {
 	public boolean removeMesa(String nomeEleicao, String nomeMesa) throws java.rmi.RemoteException;
 
 	public ArrayList<String> getMesasVotoAbertas() throws java.rmi.RemoteException;
+	public boolean identificarEleitor(int numero) throws java.rmi.RemoteException;
 }

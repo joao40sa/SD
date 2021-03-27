@@ -41,15 +41,15 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 		File f = new File("database.obj");
 		File f1 = new File("databaseEleicoes.obj");	
 		if(f.exists() && !f.isDirectory()) {
-			System.out.println("[DADOS CARREGADOS]  COMUNIDADE ACADEMICA"); 
 			eleitores = readFile();
+			System.out.println("[DADOS CARREGADOS]  COMUNIDADE ACADEMICA"); 
 		}
 		else{
 			eleitores = new ArrayList<Pessoa>();
 		}
 		if(f1.exists() && !f1.isDirectory()) {
-			System.out.println("[DADOS CARREGADOS]  ELEICOES"); 
 			eleicoes = readFileEleicao();
+			System.out.println("[DADOS CARREGADOS]  ELEICOES"); 
 		}
 		else{
 			eleicoes = new ArrayList<Eleicao>();
@@ -373,7 +373,15 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 		return false;
 	}
 
-
+	public boolean identificarEleitor(int numero) throws java.rmi.RemoteException{
+		for(int i=0; i<eleitores.size(); i++){
+			if(eleitores.get(i).getNumero() == numero){
+				System.out.println("ELEITOR "+numero+" IDENTIFICADO");
+				return true;
+			}
+		}
+		return false;
+	}
 	/*=====================*/
 
 

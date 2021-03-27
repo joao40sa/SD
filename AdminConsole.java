@@ -83,6 +83,8 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 			throw c;
 		}catch(IOException e1)		{
 			System.out.println(e1);
+		}catch(NumberFormatException  e){
+			System.out.println("FORMATO INVALIDO NO NUMERO");
 		}
 	}
 
