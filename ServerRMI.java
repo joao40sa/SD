@@ -24,8 +24,8 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 	private int REG_PORT = 7000;
 	private static int UDP_PORT = 6000;
-	private ArrayList<Eleicao> eleicoes;
-	private ArrayList<Pessoa> eleitores;
+	private static ArrayList<Eleicao> eleicoes;
+	private static ArrayList<Pessoa> eleitores;
 	private static ServerRMI server;
 	private ArrayList<String> mesasVotoAbertas; //são as mesas que já estão abertas, no maximo existe uma por departamento
 	private static String[] departamentos = {"DEI", "DEEC", "DEM", "DEC", "DEQ"};
@@ -36,8 +36,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 														 {"229.0.0.0","229.0.0.1"}}; 
 	private static Registry reg;
 
-	public ServerRMI() throws RemoteException{
-		super();
+	public static void loadDatabase(){
 		File f = new File("database.obj");
 		File f1 = new File("databaseEleicoes.obj");	
 		if(f.exists() && !f.isDirectory()) {
@@ -54,11 +53,15 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 		else{
 			eleicoes = new ArrayList<Eleicao>();
 		}
+	}
 
+	public ServerRMI() throws RemoteException{
+		super();
+		loadDatabase();
 		mesasVotoAbertas = new ArrayList<String>();
 	}
 
-	public void writeToFile(int param){ //eleitores = 0     eleições = 1
+	public static void writeToFile(int param){ //eleitores = 0     eleições = 1
 		//System.out.println("################# WRITE ###################");						
 		try{
 			if(param == 0){
@@ -83,7 +86,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
         } 
 	}
 
-	public ArrayList<Pessoa> readFile(){
+	public static ArrayList<Pessoa> readFile(){
 		//System.out.println("################# READ ###################");
 		try{
 			FileInputStream readData = new FileInputStream("database.obj");
@@ -108,7 +111,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	}
 	//Ler ficheiro de eleicoes ==========================================
 
-	public ArrayList<Eleicao> readFileEleicao(){
+	public static ArrayList<Eleicao> readFileEleicao(){
 		//System.out.println("################# READ ###################");
 		try{
 			FileInputStream readData = new FileInputStream("databaseEleicoes.obj");
@@ -221,6 +224,15 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 	public ArrayList<String> getMesasVotoAbertas() throws java.rmi.RemoteException{
 		return mesasVotoAbertas;
+	}
+
+	public ArrayList<Pessoa> getEleitoresOnline() throws java.rmi.RemoteException{
+		ArrayList<Pessoa> eleitoresOnline = new ArrayList<Pessoa>();
+		for(int i=0; i<eleitores.size(); i++){
+			if(eleitores.get(i).getEstado())
+				eleitoresOnline.add(eleitores.get(i));
+		}
+		return eleitoresOnline;
 	}
 
 	public void print_on_ServerRMI(String s) throws java.rmi.RemoteException{
@@ -416,7 +428,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 		}
 	}
 
-	private static void secundarySide(String address){
+	private static void secundarySide(String address){//pergunta se o server principal esta vivio e espera no maximo 3 seg pela resposta
 		int timeouts = 0;
 		DatagramSocket aSocket = null;
 		String s;
@@ -445,6 +457,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 					System.out.println("TIMEOUT: " + e.getMessage());
 					timeouts++;
 				}
+
 			} // while
 		}catch (SocketException e){
 			System.out.println("Socket: " + e.getMessage());
@@ -496,6 +509,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 			else{
 				secundarySide(args[0]);
+				loadDatabase();
 			}
 
 			try {

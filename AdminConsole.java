@@ -415,6 +415,27 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 				System.out.println("NAO SE ENCONTRA NENHUMA MESA ABERTA");
 			}
 			
+		}catch(java.rmi.ConnectException c){
+			throw c;
+		}catch(IOException  i){
+			System.out.println("EXCECAO");
+		}
+	}
+
+	private static void mostrarEleitoresTempoReal(ServerRMI_Interface server) throws java.rmi.ConnectException{
+		try{
+
+			ArrayList<Pessoa> eleitoresOnline = server.getEleitoresOnline();
+			int size = eleitoresOnline.size();
+			if(size==0){
+				System.out.println("SEM ELEiTORES ONLINE");
+			}
+			else{
+				System.out.println("ELEITORES ONLINE: ");
+				for(int i=0; i<size; i++){
+					System.out.println("	"+eleitoresOnline.get(i));
+				}
+			}
 
 		}catch(java.rmi.ConnectException c){
 			throw c;
