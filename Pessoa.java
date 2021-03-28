@@ -23,6 +23,7 @@ class Pessoa implements Serializable{
 		this.numero = numero;
 		this.validade_cc = validade_cc;
 		this.tipo = tipo;
+		this.estado = false;
 	}
 
 	public int getNumero()
