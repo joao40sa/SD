@@ -11,6 +11,7 @@ class Pessoa implements Serializable{
 	private int numero;
 	private String validade_cc;
 	private String tipo;
+	private boolean estado;
 
 	public Pessoa(String nome, String password, String departamento, String faculdade, String contacto, String morada, int numero, String validade_cc, String tipo){
 		this.nome = nome;
@@ -35,5 +36,13 @@ class Pessoa implements Serializable{
 
 	public String toString(){
 		return "TIPO: "+this.tipo+"\nNOME: "+this.nome+"\nNUMERO: "+this.numero;
+	}
+
+	public void getEstado(){
+		return this.estado;
+	}
+
+	public void setEstado(boolean estado){
+		this.estado = estado;
 	}
 }
