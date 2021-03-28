@@ -39,7 +39,7 @@ class Pessoa implements Serializable{
 		return "TIPO: "+this.tipo+"\nNOME: "+this.nome+"\nNUMERO: "+this.numero;
 	}
 
-	public void getEstado(){
+	public boolean getEstado(){
 		return this.estado;
 	}
 
