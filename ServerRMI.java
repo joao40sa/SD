@@ -394,6 +394,20 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 		}
 		return false;
 	}
+
+
+	public boolean verificaLogin(int num, String pass) throws java.rmi.RemoteException{
+		for(int i=0; i<eleitores.size(); i++){
+			if(eleitores.get(i).getNumero() == num){
+				if(eleitores.get(i).getPassword().equals(pass)){
+					eleitores.get(i).setEstado(true); //mete o eleitor online
+					return true;
+				}
+			}
+		}
+		return false;
+		
+	}
 	/*=====================*/
 
 

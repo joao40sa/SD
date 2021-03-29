@@ -35,11 +35,11 @@ class Pessoa implements Serializable{
 		return this.tipo;
 	}
 
-	public String getPassword(){
-		return this.password;
+	public String toString(){
+		return "TIPO: "+this.tipo+"\nNOME: "+this.nome+"\nNUMERO: "+this.numero;
 	}
 
-	public boolean getEstado(){
+	public Boolean getEstado(){
 		return this.estado;
 	}
 
@@ -47,7 +47,7 @@ class Pessoa implements Serializable{
 		this.estado = estado;
 	}
 
-	public String toString(){
-		return this.tipo + "  " + this.nome + "  " + this.numero;
+	public String getPassword(){
+		return this.password;
 	}
 }

@@ -1,4 +1,5 @@
 import java.net.MulticastSocket;
+import java.net.Socket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.io.*;
@@ -14,6 +15,7 @@ class ServerMulticast extends Thread{
     private static int PORT_DESCOBRIR = 4321;
     private static int PORT_COMUNICAR = 1234;
     private static String departamento;
+    private static ServerRMI_Interface server;
 
     public ServerMulticast(String departamento, String grupoDescobrir, String grupoComunicar) {
         super("User " + (long) (Math.random() * 1000));
@@ -144,7 +146,7 @@ class ServerMulticast extends Thread{
         ArrayList<String> gruposMulticast;
 
         try{
-            ServerRMI_Interface server = (ServerRMI_Interface) LocateRegistry.getRegistry(7000).lookup("ServerRMI");
+            server = (ServerRMI_Interface) LocateRegistry.getRegistry(7000).lookup("ServerRMI");
             System.out.print("LOCALIZACAO DA MESA: ");
             departamento = reader.readLine();
             if(server.abreMesaVoto(departamento)){
@@ -166,18 +168,67 @@ class ServerMulticast extends Thread{
 
     public void run() {
         MulticastSocket socket = null;
+        String[] tokens;
+        String[] pares;
+        
         try {
-            socket = new MulticastSocket();  // create socket without binding it (only for sending)
+            socket = new MulticastSocket(PORT_COMUNICAR);  // create socket without binding it (only for sending)
+            InetAddress group = InetAddress.getByName(MULTICAST_COMUNICAR);
+            socket.joinGroup(group);
+            int num;
+            String pass;
             while (true) {
-                byte[] buffer = "TESTE".getBytes();
 
-                InetAddress group = InetAddress.getByName(MULTICAST_COMUNICAR);
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT_COMUNICAR);
-                socket.send(packet);
+                byte[] buffer = new byte[256];
+
+                
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 
                 try { 
-                    sleep((long) (Math.random() * 5000)); //5seg 
+                    sleep((long) (Math.random() * 5000)); //5seg
+                    socket.setSoTimeout(2000);
+                    socket.receive(packet);
+                    String message = new String(packet.getData(), 0, packet.getLength());
+                    //System.out.println("Tamanhao recebido: "+packet.getLength());
+                    System.out.println("######Message:" + message);
+
+
+                    tokens = message.split(";");
+                    pares = tokens[0].split("\\|");
+
+                    if(pares[1].equals("login")){
+                        pares = tokens[1].split("\\|");
+                        num = Integer.parseInt(pares[1]);
+                        pares = tokens[2].split("\\|");
+                        pass = pares[1];
+
+                        if(server.verificaLogin(num, pass)){
+                            //envia mensagem com as eleições a decorrer
+
+                            //depois de escolher, devolver as listas canidatas
+
+
+                            message = "type|status;logged|on;msg|Welcome to eVoting";
+
+                            buffer = message.getBytes();
+                            packet = new DatagramPacket(buffer, buffer.length, group, PORT_COMUNICAR);
+                            socket.send(packet);
+                        }
+                        else{
+                            message = "type|status;logged|off;msg|Invalid";
+
+                            buffer = message.getBytes();
+                            packet = new DatagramPacket(buffer, buffer.length, group, PORT_COMUNICAR);
+                            socket.send(packet);
+                        }
+                    }
+
+                    
+
+
+
                 } catch (InterruptedException e) {
+                } catch(IOException io){
                 }
             }
         } catch (IOException e) {
