@@ -520,7 +520,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 							break;
 						case 8:
 							System.out.println("\n=====MOSTRAR ELEITORES EM TEMPO REAL======\n");
-							
+							mostrarEleitoresTempoReal(server);
 							System.out.println("\n==========================================\n");
 							break;
 						case 9:
