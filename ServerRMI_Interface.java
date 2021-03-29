@@ -26,4 +26,8 @@ public interface ServerRMI_Interface extends Remote {
 	public ArrayList<Pessoa> getEleitoresOnline() throws java.rmi.RemoteException;
 
 	public boolean verificaLogin(int num, String pass) throws java.rmi.RemoteException;
+	public ArrayList<Eleicao> eleicoesAtivas(int num) throws java.rmi.RemoteException;
+
+
+	public ArrayList<String> getListaCandidatos(String nomeEleicao) throws java.rmi.RemoteException;
 }

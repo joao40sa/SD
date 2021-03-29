@@ -1,4 +1,7 @@
 import java.util.Date;
+
+import javax.xml.crypto.dsig.keyinfo.RetrievalMethod;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -35,6 +38,10 @@ class Eleicao implements Serializable{
 		return true;
 	}
 
+	public ArrayList<ListaCandidatos> getListasCandidatos(){
+		return this.lista_candidatos;
+	}
+	
 	public boolean removeListaCandidatos(String nome){
 		int ind = -1;
 		for(int i=0; i<this.lista_candidatos.size(); i++){
@@ -103,6 +110,10 @@ class Eleicao implements Serializable{
 
 	public String getRestricaoTipo(){
 		return this.restPessoa;
+	}
+
+	public String getRestricaoDep(){
+		return this.restDep;
 	}
 
 	public String toString(){

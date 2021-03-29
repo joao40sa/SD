@@ -16,6 +16,7 @@ class ServerMulticast extends Thread{
     private static int PORT_COMUNICAR = 1234;
     private static String departamento;
     private static ServerRMI_Interface server;
+    
 
     public ServerMulticast(String departamento, String grupoDescobrir, String grupoComunicar) {
         super("User " + (long) (Math.random() * 1000));
@@ -69,13 +70,13 @@ class ServerMulticast extends Thread{
             System.out.print("NUMERO DE IDENTIFICACAO: ");
             numero = Integer.parseInt(reader.readLine());
             if(server.identificarEleitor(numero)){
-                System.out.println("IDENTIFICACAO CONCLUIDA COM SUCESSO");
+                System.out.println("\nIDENTIFICACAO CONCLUIDA COM SUCESSO\n");
                 desbloqueiaTerminal();
             }
 
 
         }catch(IOException e){
-            System.out.println("\nFORMATO DE DADOS INVALIDOS");
+            System.out.println("\nFORMATO DE DADOS INVALIDOS\n");
         }
     }
 
@@ -117,7 +118,7 @@ class ServerMulticast extends Thread{
                             pares = tokens[2].split("\\|");
                             terminal = pares[1];
 
-                            System.out.println("MANDA BLOQUEAR "+terminal);
+                            //System.out.println("MANDA BLOQUEAR "+terminal);
                             message = "type|setEstado;estado|OCUPADO;target|"+terminal+";group|"+MULTICAST_COMUNICAR;
                             buffer = message.getBytes();
 
@@ -170,13 +171,14 @@ class ServerMulticast extends Thread{
         MulticastSocket socket = null;
         String[] tokens;
         String[] pares;
-        
+        Pessoa p = null;
         try {
             socket = new MulticastSocket(PORT_COMUNICAR);  // create socket without binding it (only for sending)
             InetAddress group = InetAddress.getByName(MULTICAST_COMUNICAR);
             socket.joinGroup(group);
             int num;
             String pass;
+            
             while (true) {
 
                 byte[] buffer = new byte[256];
@@ -187,13 +189,28 @@ class ServerMulticast extends Thread{
                 try { 
                     sleep((long) (Math.random() * 5000)); //5seg
                     socket.setSoTimeout(2000);
+
+
+                    //Recebe informações do terminal
                     socket.receive(packet);
                     String message = new String(packet.getData(), 0, packet.getLength());
+                    int idTerminal;
+
+
                     //System.out.println("Tamanhao recebido: "+packet.getLength());
-                    System.out.println("######Message:" + message);
+                    //System.out.println("######Message:" + message);
 
 
                     tokens = message.split(";");
+
+                    //guardar id terminal**********
+                    pares = tokens[tokens.length-1].split("\\|");
+                    idTerminal = Integer.parseInt(pares[1]);
+
+                    //System.out.println("ID TERMINAL: " + idTerminal);
+                    //************************ */
+
+
                     pares = tokens[0].split("\\|");
 
                     if(pares[1].equals("login")){
@@ -201,18 +218,40 @@ class ServerMulticast extends Thread{
                         num = Integer.parseInt(pares[1]);
                         pares = tokens[2].split("\\|");
                         pass = pares[1];
-
-                        if(server.verificaLogin(num, pass)){
+                        
+                        if( server.verificaLogin(num, pass)){
                             //envia mensagem com as eleições a decorrer
 
                             //depois de escolher, devolver as listas canidatas
+                            ArrayList<Eleicao> arrayEleicao;
+                            
 
+                            message = "type|status;logged|on;msg|Welcome to eVoting;target|"+idTerminal;
 
-                            message = "type|status;logged|on;msg|Welcome to eVoting";
+                            
+                            buffer = message.getBytes();
+                            packet = new DatagramPacket(buffer, buffer.length, group, PORT_COMUNICAR);
+                            socket.send(packet);
+
+                            arrayEleicao = server.eleicoesAtivas(num);
+                            //System.out.println(arrayEleicao);
+
+                            //====== ENVIAR MENSAGEM COM AS ELEIÇÕES DE ACORDO COM AS CARACTERISTICA DO ELEITOR =========================
+                            message = "type|listaEleicoes;item_count|"+arrayEleicao.size();
+
+                            for(int i = 0; i < arrayEleicao.size(); i++){
+                                message = message + ";item_"+i+"_name|"+arrayEleicao.get(i).getTitulo();
+                            }
+                            message = message + ";target|" + idTerminal;
+                            //System.out.println("LISTA: "+message);
 
                             buffer = message.getBytes();
                             packet = new DatagramPacket(buffer, buffer.length, group, PORT_COMUNICAR);
                             socket.send(packet);
+
+                            //=============================================================================================
+
+
                         }
                         else{
                             message = "type|status;logged|off;msg|Invalid";
@@ -221,6 +260,36 @@ class ServerMulticast extends Thread{
                             packet = new DatagramPacket(buffer, buffer.length, group, PORT_COMUNICAR);
                             socket.send(packet);
                         }
+                    }
+
+                    if(pares[1].equals("getListaCandidatos")){
+                        String nomeEleicao;
+                        ArrayList<String> listaCandidatos;
+                        pares = tokens[1].split("\\|");
+                        nomeEleicao = pares[1];
+
+                        listaCandidatos = server.getListaCandidatos(nomeEleicao);
+
+                        //System.out.println(listaCandidatos);
+
+                        //====== ENVIAR MENSAGEM COM AS LISTAS DE CANDIDATOS DE ACORDO COM A ELEICAO =========================
+                        message = "type|returnListaCandidatos;item_count|"+listaCandidatos.size();
+
+                        for(int i = 0; i < listaCandidatos.size(); i++){
+                            message = message + ";item_"+i+"_name|"+listaCandidatos.get(i);
+                        }
+                        message = message + ";target|" + idTerminal;
+                        //System.out.println("LISTA: "+message);
+
+                        buffer = message.getBytes();
+                        packet = new DatagramPacket(buffer, buffer.length, group, PORT_COMUNICAR);
+                        socket.send(packet);
+
+                        //=============================================================================================
+
+
+
+
                     }
 
                     

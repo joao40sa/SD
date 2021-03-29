@@ -8,6 +8,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
+import java.util.Date;
+
 
 //Imports FILE===============================
 
@@ -120,7 +122,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
             ArrayList<Eleicao> el = (ArrayList<Eleicao>) readStream.readObject();
             readStream.close();
 
-            System.out.println(el.toString());
+            //System.out.println(el.toString());
 			return (el);
 			
 		
@@ -241,7 +243,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 	public boolean registarEleicao(Eleicao e) throws java.rmi.RemoteException   {
 		boolean add = true;
-
+		System.out.println("Entrou no server registar eleicao");
 		for(int i=0; i<eleicoes.size(); i++){
 			if(eleicoes.get(i).getTitulo()==e.getTitulo()){
 				System.out.println("[ERRO]  JA EXISTE UMA ELEICAO CRIADA COM O TITULO: " + e.getTitulo());
@@ -396,6 +398,34 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	}
 
 
+	public ArrayList<Eleicao> eleicoesAtivas(int num) throws java.rmi.RemoteException{
+		Date dataAtual = Calendar.getInstance().getTime();
+		ArrayList<Eleicao> eleicoesAtuais = new ArrayList<Eleicao>();
+		Pessoa p = null;
+		for(int i = 0; i < eleitores.size(); i++){
+			if(eleitores.get(i).getNumero() == num){
+				p = eleitores.get(i);
+				break;
+			}
+		}
+		
+		for(int i = 0; i < eleicoes.size(); i++){
+			if(dataAtual.compareTo(eleicoes.get(i).getDataInicio()) > 0 && dataAtual.compareTo(eleicoes.get(i).getDataFim()) < 0) {
+				if(eleicoes.get(i).getRestricaoTipo().equals(p.getTipo())){
+					if(eleicoes.get(i).getRestricaoDep() == null || eleicoes.get(i).getRestricaoDep().equals(p.getDepartamento())){
+						eleicoesAtuais.add(eleicoes.get(i));
+
+					}
+				}
+				
+				//eleicoesAtuais.get(i).toString();
+			}
+		}
+		return eleicoesAtuais;
+	}
+
+
+	//login
 	public boolean verificaLogin(int num, String pass) throws java.rmi.RemoteException{
 		for(int i=0; i<eleitores.size(); i++){
 			if(eleitores.get(i).getNumero() == num){
@@ -407,6 +437,29 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 		}
 		return false;
 		
+	}
+
+
+	public ArrayList<String> getListaCandidatos(String nomeEleicao) throws java.rmi.RemoteException{
+
+		ArrayList<String> lista = new ArrayList<String>();
+		ArrayList<ListaCandidatos> listasCandi = null;
+		for(int i = 0; i < eleicoes.size(); i++){
+			if(eleicoes.get(i).getTitulo().equals(nomeEleicao)){
+				listasCandi = eleicoes.get(i).getListasCandidatos();
+				break;
+			}
+		}
+
+		for(int j = 0; j < listasCandi.size(); j++){
+			lista.add(listasCandi.get(j).getNome());
+
+		}
+
+		return lista;
+
+
+
 	}
 	/*=====================*/
 

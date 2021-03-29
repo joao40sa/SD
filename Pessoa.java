@@ -50,4 +50,8 @@ class Pessoa implements Serializable{
 	public String getPassword(){
 		return this.password;
 	}
+
+	public String getDepartamento(){
+		return this.departamento;
+	}
 }

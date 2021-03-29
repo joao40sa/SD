@@ -135,7 +135,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 					}
 				}
 			}
-
+			
 			if(server.registarEleicao(new Eleicao(titulo, descricao, data_inicio, data_fim, restPessoa, restDep))){
 				System.out.println("\nELEICAO CRIADA COM SUCESSO");
 			}
