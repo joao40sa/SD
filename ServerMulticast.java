@@ -256,7 +256,7 @@ class ServerMulticast extends Thread{
 
                         }
                         else{
-                            message = "type|status;logged|off;msg|Invalid";
+                            message = "type|status;logged|off;msg|Invalid;target|" + idTerminal;
 
                             buffer = message.getBytes();
                             packet = new DatagramPacket(buffer, buffer.length, group, PORT_COMUNICAR);
@@ -269,7 +269,10 @@ class ServerMulticast extends Thread{
                         pares = tokens[1].split("\\|");
                         nomeEleicao = pares[1];
 
-                        listaCandidatos = server.getListaCandidatos(nomeEleicao);
+                        pares = tokens[2].split("\\|");
+                        num = Integer.parseInt(pares[1]);
+
+                        listaCandidatos = server.getListaCandidatos(nomeEleicao, num);
 
                         //System.out.println(listaCandidatos);
 

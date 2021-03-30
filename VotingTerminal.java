@@ -5,106 +5,22 @@ import java.io.IOException;
 import java.util.Scanner;
 import java.io.*;
 
-
-class VotingTerminal extends Thread{
-
-    private static String MULTICAST_DESCOBRIR;
-    private static String MULTICAST_COMUNICAR;
-    private static int PORT_DESCOBRIR = 4321;
+//deixar comment
+class VotingThread implements Runnable{
+    String id; // name of thread
+    Thread t;
     private static int PORT_COMUNICAR = 1234;
-    private static String id;
-    private static boolean estado; //false se tem alguem, true se esta livre
-    private static VotingTerminal terminal;
+    private static String MULTICAST_COMUNICAR;
 
-    public VotingTerminal(String grupoDescobrir){
-        MULTICAST_DESCOBRIR = grupoDescobrir;
-        id = ""+ ((long) (Math.random()*1000));
-        estado = true;
+    VotingThread(String idTerminal, String multicast) {
+        id = idTerminal;
+        MULTICAST_COMUNICAR = multicast;        
+        t = new Thread(this, id);
+        t.start(); // Start the thread
     }
-
-    public static void main(String[] args) {
-        if(args.length > 0){
-            terminal = new VotingTerminal(args[0]);
-            System.out.println(terminal.id);
-            connect();
-            //terminal.start();
-        }
-        else{
-            System.out.println("FALTOU ESPECIFICAR O GRUPO MULTICAST PARA DESCOBERTA");
-        } 
-    }
-
-    private static void connect(){
-        MulticastSocket socket = null;
-        String[] tokens;
-        String[] pares;
-        String aux_estado;
-        int numero;
-        String pass;
-
-        try {
-            socket = new MulticastSocket(PORT_DESCOBRIR);  // create socket and bind it
-            InetAddress group = InetAddress.getByName(MULTICAST_DESCOBRIR);
-            socket.joinGroup(group);
-            InputStreamReader input = new InputStreamReader(System.in);
-            BufferedReader reader = new BufferedReader(input);
-
-            while (true) {
-                byte[] buffer = new byte[256];
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                socket.receive(packet);
-
-                String message = new String(packet.getData(), 0, packet.getLength());
-                tokens = message.split(";");
-                pares = tokens[0].split("\\|");
-                if(pares[1].equals("getEstado")){
-                    if(estado){
-                        if(estado){
-                            message =  "type|sendEstado;estado|LIVRE;sender|"+id;
-                        }else{
-                            message = "type|sendEstado;estado|OCUPADO;sender|"+id;
-                        }
-                        buffer = message.getBytes();
-                        packet = new DatagramPacket(buffer, buffer.length, group, PORT_DESCOBRIR);
-                        socket.send(packet);
-                    }
-
-                }else if(pares[1].equals("setEstado")){
-                    pares = tokens[1].split("\\|");
-                    aux_estado = pares[1];
-
-                    pares = tokens[2].split("\\|");
-
-                    if(pares[1].equals(id)){
-                        System.out.println("[TERMINAL DESBLOQUEADO]");
-                        if(aux_estado.equals("OCUPADO")){
-                            estado = false;
-                            pares = tokens[3].split("\\|");
-                            MULTICAST_COMUNICAR = pares[1];
-
-                            
-
-                            terminal.start();
-                            //terminal.join();
-                        }
-                        else{
-                            System.out.println("Esta livre");
-                            estado = true;
-                        }
-                    }
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }/*catch (InterruptedException e) {
-            terminal.interrupt();  // set interrupt flag
-        }*/finally {
-            socket.close();
-        }
-    }
-    
 
     public void run() {
+        System.out.println("[TERMINAL DESBLOQUEADO]");
         MulticastSocket socket = null;
         String[] tokens;
         String[] pares;
@@ -210,6 +126,7 @@ class VotingTerminal extends Thread{
                         nEleicoes = Integer.parseInt(pares[1]);
                         if(nEleicoes == 0){
                             System.out.println("\nNAO EXISTEM ELEICOES EM QUE POSSA VOTAR");
+                            return;
                         }
                         else{
                             System.out.println("\nELEICOES DISPONIVEIS:");
@@ -225,7 +142,7 @@ class VotingTerminal extends Thread{
                             pares = tokens[opcaoEscolhida+1].split("\\|"); //+2 por causa do offset da mensagem
                             eleicaoEscolhida = pares[1];
                             
-                            message =  "type|getListaCandidatos;eleicao|"+ eleicaoEscolhida + ";sender|" + id;
+                            message =  "type|getListaCandidatos;eleicao|"+ eleicaoEscolhida + ";username|"+ numero +";sender|" + id;
                             
                             buffer = message.getBytes();
 
@@ -248,6 +165,7 @@ class VotingTerminal extends Thread{
                         nListas = Integer.parseInt(pares[1]);
                         if(nListas == 0){
                             System.out.println("\nNAO EXISTEM LISTAS EM QUE POSSA VOTAR");
+                            return;
                         }
                         else{
                             System.out.println("\nListas DISPONIVEIS:");
@@ -297,7 +215,6 @@ class VotingTerminal extends Thread{
                         else{
                             System.out.println("\n***********  VOTO INVALIDO  ***********");
                         }
-                        estado = true;
                         socket.close();
                         return;
                     }
@@ -309,4 +226,111 @@ class VotingTerminal extends Thread{
             socket.close();
         }
     }
+    
+
+
+
+
+
+}
+
+class VotingTerminal extends Thread{
+
+    private static String MULTICAST_DESCOBRIR;
+    private static String MULTICAST_COMUNICAR;
+    private static int PORT_DESCOBRIR = 4321;
+    private static int PORT_COMUNICAR = 1234;
+    private static String id;
+    private static boolean estado; //false se tem alguem, true se esta livre
+    private static VotingTerminal terminal;
+
+    public VotingTerminal(String grupoDescobrir){
+        MULTICAST_DESCOBRIR = grupoDescobrir;
+        id = ""+ ((long) (Math.random()*1000));
+        estado = true;
+    }
+
+    public static void main(String[] args) {
+        if(args.length > 0){
+            terminal = new VotingTerminal(args[0]);
+            System.out.println(terminal.id);
+            connect();
+            //terminal.start();
+        }
+        else{
+            System.out.println("FALTOU ESPECIFICAR O GRUPO MULTICAST PARA DESCOBERTA");
+        } 
+    }
+
+    private static void connect(){
+        MulticastSocket socket = null;
+        String[] tokens;
+        String[] pares;
+        String aux_estado;
+        int numero;
+        String pass;
+
+        try {
+            socket = new MulticastSocket(PORT_DESCOBRIR);  // create socket and bind it
+            InetAddress group = InetAddress.getByName(MULTICAST_DESCOBRIR);
+            socket.joinGroup(group);
+            InputStreamReader input = new InputStreamReader(System.in);
+            BufferedReader reader = new BufferedReader(input);
+
+            while (true) {
+                byte[] buffer = new byte[256];
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                socket.receive(packet);
+
+                String message = new String(packet.getData(), 0, packet.getLength());
+                tokens = message.split(";");
+                pares = tokens[0].split("\\|");
+                if(pares[1].equals("getEstado")){
+                    if(estado){
+                        if(estado){
+                            message =  "type|sendEstado;estado|LIVRE;sender|"+id;
+                        }else{
+                            message = "type|sendEstado;estado|OCUPADO;sender|"+id;
+                        }
+                        buffer = message.getBytes();
+                        packet = new DatagramPacket(buffer, buffer.length, group, PORT_DESCOBRIR);
+                        socket.send(packet);
+                    }
+
+                }else if(pares[1].equals("setEstado")){
+                    pares = tokens[1].split("\\|");
+                    aux_estado = pares[1];
+
+                    pares = tokens[2].split("\\|");
+
+                    if(pares[1].equals(id)){
+                        if(aux_estado.equals("OCUPADO")){
+                            estado = false;
+                            pares = tokens[3].split("\\|");
+                            MULTICAST_COMUNICAR = pares[1];
+
+                            VotingThread terminalThread = new VotingThread(id, MULTICAST_COMUNICAR);
+
+                            terminalThread.t.join();
+                            System.out.println("[TERMINAL BLOQUEADO]");
+                            estado = true;
+
+
+                        }
+                        else{
+                            System.out.println("Esta livre");
+                            estado = true;
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }catch (InterruptedException e) {
+            System.out.println("Main thread Interrupted");  // set interrupt flag
+        }finally {
+            socket.close();
+        }
+    }
+
 }

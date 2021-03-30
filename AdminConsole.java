@@ -428,7 +428,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
             ArrayList<Pessoa> eleitoresOnline = server.getEleitoresOnline();
             int size = eleitoresOnline.size();
             if(size==0){
-                System.out.println("SEM ELEiTORES ONLINE");
+                System.out.println("SEM ELEITORES ONLINE");
             }
             else{
                 System.out.println("ELEITORES ONLINE: ");

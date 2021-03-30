@@ -402,9 +402,13 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 		Date dataAtual = Calendar.getInstance().getTime();
 		ArrayList<Eleicao> eleicoesAtuais = new ArrayList<Eleicao>();
 		Pessoa p = null;
+		int indiceEleitor = -1;
+
+
 		for(int i = 0; i < eleitores.size(); i++){
 			if(eleitores.get(i).getNumero() == num){
 				p = eleitores.get(i);
+				indiceEleitor = i;
 				break;
 			}
 		}
@@ -414,13 +418,18 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 				if(eleicoes.get(i).getRestricaoTipo().equals(p.getTipo())){
 					if(eleicoes.get(i).getRestricaoDep() == null || eleicoes.get(i).getRestricaoDep().equals(p.getDepartamento())){
 						eleicoesAtuais.add(eleicoes.get(i));
-
 					}
 				}
 				
 				//eleicoesAtuais.get(i).toString();
 			}
 		}
+
+		//se a lista de eleicoes em que pode votar estiver vazia o eleitor sai porque nao pode votar em nada
+		if(eleicoesAtuais.size()<=0){
+			eleitores.get(indiceEleitor).setEstado(false);
+		}
+
 		return eleicoesAtuais;
 	}
 
@@ -430,8 +439,13 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 		for(int i=0; i<eleitores.size(); i++){
 			if(eleitores.get(i).getNumero() == num){
 				if(eleitores.get(i).getPassword().equals(pass)){
-					eleitores.get(i).setEstado(true); //mete o eleitor online
-					return true;
+					if(eleitores.get(i).getEstado() == false){
+						eleitores.get(i).setEstado(true); //mete o eleitor online
+						return true;
+					}
+					else{
+						return false;
+					}
 				}
 			}
 		}
@@ -440,7 +454,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	}
 
 
-	public ArrayList<String> getListaCandidatos(String nomeEleicao) throws java.rmi.RemoteException{
+	public ArrayList<String> getListaCandidatos(String nomeEleicao, int numeroEleitor) throws java.rmi.RemoteException{
 
 		ArrayList<String> lista = new ArrayList<String>();
 		ArrayList<ListaCandidatos> listasCandi = null;
@@ -453,13 +467,18 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 		for(int j = 0; j < listasCandi.size(); j++){
 			lista.add(listasCandi.get(j).getNome());
-
 		}
 
+
+		if(lista.size()<=0){
+			for(int i=0; i<eleitores.size(); i++){
+				if(eleitores.get(i).getNumero() == numeroEleitor){
+					eleitores.get(i).setEstado(false);
+					break;
+				}
+			}
+		}
 		return lista;
-
-
-
 	}
 
 
@@ -470,6 +489,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 				indiceEleitor = i;
 				if(eleitores.get(i).adicionaEleicaoVotada(eleicaoEscolhida, mesa)){
 					System.out.println("[VOTO] ELEITOR "+numEleitor+" PODE VOTAR NA ELEICAO "+eleicaoEscolhida);
+					writeToFile(0);
 					break;
 				}
 				else{
@@ -485,9 +505,11 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 			if(eleicoes.get(i).getTitulo().equals(eleicaoEscolhida)){
 				if(eleicoes.get(i).adicionaVoto(listaEscolhida)){
 					System.out.println("[VOTO] ELEITOR "+numEleitor+" VOTOU COM SUCESSO NA ELEICAO "+eleicaoEscolhida);
+					writeToFile(1);
 					return true;
 				}
 				else{
+					writeToFile(1);
 					return false;
 				}
 			}
