@@ -461,6 +461,59 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 
 	}
+
+
+	public boolean processaVoto(String eleicaoEscolhida, String listaEscolhida, int numEleitor, String mesa) throws java.rmi.RemoteException{
+		int indiceEleitor = 0; //guardar indice eleitor, depois de percorrer todos os eleitores
+		for(int i=0; i<eleitores.size(); i++){
+			if(eleitores.get(i).getNumero() == numEleitor){
+				indiceEleitor = i;
+				if(eleitores.get(i).adicionaEleicaoVotada(eleicaoEscolhida, mesa)){
+					System.out.println("[VOTO] ELEITOR "+numEleitor+" PODE VOTAR NA ELEICAO "+eleicaoEscolhida);
+					break;
+				}
+				else{
+					eleitores.get(indiceEleitor).setEstado(false);
+					return false;
+				}
+			}
+		}
+
+		eleitores.get(indiceEleitor).setEstado(false);
+
+		for(int i=0; i<eleicoes.size(); i++){
+			if(eleicoes.get(i).getTitulo().equals(eleicaoEscolhida)){
+				if(eleicoes.get(i).adicionaVoto(listaEscolhida)){
+					System.out.println("[VOTO] ELEITOR "+numEleitor+" VOTOU COM SUCESSO NA ELEICAO "+eleicaoEscolhida);
+					return true;
+				}
+				else{
+					return false;
+				}
+			}
+		}
+		return false;
+	}
+
+
+	public int getResultados(String eleicao) throws java.rmi.RemoteException{
+		for(int i=0; i<eleicoes.size(); i++){
+			if(eleicoes.get(i).getTitulo().equals(eleicao)){
+				return eleicoes.get(i).getTotalVotos();
+			}
+		}
+		return -1;
+	}
+
+
+	public ArrayList<ArrayList<String>> getHistoricoVotos(int numEleitor) throws java.rmi.RemoteException{
+		for(int i=0; i<eleitores.size(); i++){
+			if(eleitores.get(i).getNumero() == numEleitor){
+				return eleitores.get(i).getHistoricoVotos();
+			}
+		}
+		return null;
+	}
 	/*=====================*/
 
 

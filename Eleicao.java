@@ -13,9 +13,11 @@ class Eleicao implements Serializable{
 	private String descricao;
 	private ArrayList<ListaCandidatos> lista_candidatos;
 	private ArrayList<String> mesas_voto;
-
 	private String restPessoa;
 	private String restDep; 
+	private int totalVotos;
+	private int votosBranco;
+	private int votosNulo;
 
 	public Eleicao(String titulo, String descricao, Date data_inicio, Date data_fim, String restPessoa, String restDep){
 		this.titulo = titulo;
@@ -26,6 +28,32 @@ class Eleicao implements Serializable{
 		this.restPessoa = restPessoa;
 		this.lista_candidatos = new ArrayList<>();
 		this.mesas_voto = new ArrayList<>();
+		this.votosBranco = 0;
+		this.votosNulo = 0;
+		this.totalVotos = 0;
+	}
+
+	public boolean adicionaVoto(String lista){
+		if(lista.equals("branco")){
+			this.votosBranco++;
+			this.totalVotos++;
+			return true;
+		}
+		else if(lista.equals("nulo")){
+			this.votosNulo++;
+			this.totalVotos++;
+			return true;
+		}
+		else{
+			for(int i=0; i<this.lista_candidatos.size(); i++){
+				if(lista_candidatos.get(i).getNome().equals(lista)){
+					this.totalVotos++;
+					lista_candidatos.get(i).addVoto();
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public boolean addListaCandidatos(ListaCandidatos lista){
@@ -118,6 +146,10 @@ class Eleicao implements Serializable{
 
 	public String toString(){
 		return "TITULO: "+this.titulo+"\nDESCRICAO: "+this.descricao+"\nDATA INICIO: "+this.data_inicio+"\nDATA FIM: "+this.data_fim+"\nRESTRICAO PESSOA: "+this.restPessoa+"\nRESTRICAO DEPARTAMENTO: "+this.restDep;
+	}
+
+	public int getTotalVotos(){
+		return this.totalVotos;
 	}
 
 }

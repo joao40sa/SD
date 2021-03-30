@@ -8,7 +8,7 @@ import java.io.*;
 
 class VotingTerminal extends Thread{
 
-	private static String MULTICAST_DESCOBRIR;
+    private static String MULTICAST_DESCOBRIR;
     private static String MULTICAST_COMUNICAR;
     private static int PORT_DESCOBRIR = 4321;
     private static int PORT_COMUNICAR = 1234;
@@ -47,7 +47,7 @@ class VotingTerminal extends Thread{
             InetAddress group = InetAddress.getByName(MULTICAST_DESCOBRIR);
             socket.joinGroup(group);
             InputStreamReader input = new InputStreamReader(System.in);
-			BufferedReader reader = new BufferedReader(input);
+            BufferedReader reader = new BufferedReader(input);
 
             while (true) {
                 byte[] buffer = new byte[256];
@@ -85,6 +85,7 @@ class VotingTerminal extends Thread{
                             
 
                             terminal.start();
+                            //terminal.join();
                         }
                         else{
                             System.out.println("Esta livre");
@@ -95,7 +96,9 @@ class VotingTerminal extends Thread{
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
+        }/*catch (InterruptedException e) {
+            terminal.interrupt();  // set interrupt flag
+        }*/finally {
             socket.close();
         }
     }
@@ -106,11 +109,13 @@ class VotingTerminal extends Thread{
         String[] tokens;
         String[] pares;
         String aux_estado;
+        String eleicaoEscolhida = null; //eleicao em que o eleitor escolheu votar
+        String listaEscolhida = null; //lista candidata da eleicao em que o eleitore escolheu votar
 
         try {
 
             InputStreamReader input = new InputStreamReader(System.in);
-			BufferedReader reader = new BufferedReader(input);
+            BufferedReader reader = new BufferedReader(input);
 
             socket = new MulticastSocket(PORT_COMUNICAR);  // create socket and bind it
             InetAddress group = InetAddress.getByName(MULTICAST_COMUNICAR);
@@ -218,9 +223,9 @@ class VotingTerminal extends Thread{
 
                             
                             pares = tokens[opcaoEscolhida+1].split("\\|"); //+2 por causa do offset da mensagem
+                            eleicaoEscolhida = pares[1];
                             
-                            
-                            message =  "type|getListaCandidatos;eleicao|"+ pares[1] + ";sender|" + id;
+                            message =  "type|getListaCandidatos;eleicao|"+ eleicaoEscolhida + ";sender|" + id;
                             
                             buffer = message.getBytes();
 
@@ -250,7 +255,51 @@ class VotingTerminal extends Thread{
                                 pares = tokens[i+2].split("\\|"); //+2 por causa do offset da mensagem
                                 System.out.println("    ["+(i+1)+"]  "+pares[1]);
                             }
+                            System.out.println("    ["+(nListas+1)+"]  VOTO BRANCO");
+                            System.out.println("    ["+(nListas+2)+"]  VOTO NULO");
+
+                            System.out.print("OPCAO: ");
+                            opcaoEscolhida = Integer.parseInt(reader.readLine());
+
+                            if(opcaoEscolhida == nListas+1){
+                                listaEscolhida = "branco";
+                            }
+                            else if(opcaoEscolhida == nListas+2){
+                                listaEscolhida = "nulo";
+                            }
+                            else{
+                                pares = tokens[opcaoEscolhida+1].split("\\|");
+                                listaEscolhida = pares[1];
+                            }
+
+                            
+
+                            //ystem.out.println("OPCAO ESCOLHIDA: " + pares[1]);
+
+                            message =  "type|voto;eleicao|"+ eleicaoEscolhida + ";lista|" + listaEscolhida + ";numero|" + numero + ";sender|" + id;
+                            //System.out.println("MESSAGE: "+message);
+                            buffer = message.getBytes();
+
+                            packet = new DatagramPacket(buffer, buffer.length, group, PORT_COMUNICAR);
+                            socket.send(packet);
+
+
                         }
+                    }
+
+                    if(pares[1].equals("estadoVoto")){
+
+
+                        pares = tokens[1].split("\\|");
+                        if(pares[1].equals("aceite")){
+                            System.out.println("\n***********  VOTO REGISTADO COM SUCESSO  ***********");
+                        }
+                        else{
+                            System.out.println("\n***********  VOTO INVALIDO  ***********");
+                        }
+                        estado = true;
+                        socket.close();
+                        return;
                     }
                 }
             }

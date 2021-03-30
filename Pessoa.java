@@ -1,4 +1,5 @@
 import java.io.Serializable;
+import java.util.ArrayList;
 
 class Pessoa implements Serializable{
 
@@ -12,6 +13,7 @@ class Pessoa implements Serializable{
 	private String validade_cc;
 	private String tipo;
 	private boolean estado;
+	private ArrayList<ArrayList<String>> historicoVotos;
 
 	public Pessoa(String nome, String password, String departamento, String faculdade, String contacto, String morada, int numero, String validade_cc, String tipo){
 		this.nome = nome;
@@ -24,6 +26,7 @@ class Pessoa implements Serializable{
 		this.validade_cc = validade_cc;
 		this.tipo = tipo;
 		this.estado = false;
+		this.historicoVotos = new ArrayList<>();
 	}
 
 	public int getNumero()
@@ -53,5 +56,23 @@ class Pessoa implements Serializable{
 
 	public String getDepartamento(){
 		return this.departamento;
+	}
+
+	public boolean adicionaEleicaoVotada(String nomeEleicao, String departamento){
+		for(int i=0; i<this.historicoVotos.size(); i++){
+			if(this.historicoVotos.get(i).get(0).equals(nomeEleicao))
+				return false;
+		}
+
+		ArrayList<String> conjunto = new ArrayList<String>(); //PAR eleicao e local onde votou
+		conjunto.add(nomeEleicao);
+		conjunto.add(departamento);
+		this.historicoVotos.add(conjunto);
+
+		return true;
+	}
+
+	public ArrayList<ArrayList<String>> getHistoricoVotos(){
+		return this.historicoVotos;
 	}
 }

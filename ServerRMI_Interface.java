@@ -30,4 +30,9 @@ public interface ServerRMI_Interface extends Remote {
 
 
 	public ArrayList<String> getListaCandidatos(String nomeEleicao) throws java.rmi.RemoteException;
+
+	public boolean processaVoto(String eleicaoEscolhida, String listaEscolhida, int numEleitor, String mesa) throws java.rmi.RemoteException;
+	public int getResultados(String eleicao) throws java.rmi.RemoteException;
+
+	public ArrayList<ArrayList<String>> getHistoricoVotos(int numEleitor) throws java.rmi.RemoteException;
 }

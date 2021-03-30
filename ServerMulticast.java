@@ -14,9 +14,8 @@ class ServerMulticast extends Thread{
     private static String MULTICAST_COMUNICAR;
     private static int PORT_DESCOBRIR = 4321;
     private static int PORT_COMUNICAR = 1234;
-    private static String departamento;
+    private static String departamento; //departamento onde se encontra a mesa
     private static ServerRMI_Interface server;
-    
 
     public ServerMulticast(String departamento, String grupoDescobrir, String grupoComunicar) {
         super("User " + (long) (Math.random() * 1000));
@@ -141,7 +140,6 @@ class ServerMulticast extends Thread{
     }
 
     public static void main(String[] args) {
-        String departamento;
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
         ArrayList<String> gruposMulticast;
@@ -169,15 +167,19 @@ class ServerMulticast extends Thread{
 
     public void run() {
         MulticastSocket socket = null;
-        String[] tokens;
-        String[] pares;
-        Pessoa p = null;
+        String[] tokens; //parsing da mensagem
+        String[] pares; //parsing da mensagem
+        String nomeEleicao = null; //eleicao a processar recebida por mensagem
+        String listaEscolhida = null; //lista em que o eleitor pretende votar
+        int num; //numero do eleitor que enviou a mensagem(usada no login e no voto)
+        String pass = null; //pass do eleitor(para login)
+        int idTerminal; //id do terminal com que estamos a comunicar
+
         try {
             socket = new MulticastSocket(PORT_COMUNICAR);  // create socket without binding it (only for sending)
             InetAddress group = InetAddress.getByName(MULTICAST_COMUNICAR);
             socket.joinGroup(group);
-            int num;
-            String pass;
+            
             
             while (true) {
 
@@ -194,7 +196,7 @@ class ServerMulticast extends Thread{
                     //Recebe informações do terminal
                     socket.receive(packet);
                     String message = new String(packet.getData(), 0, packet.getLength());
-                    int idTerminal;
+                    
 
 
                     //System.out.println("Tamanhao recebido: "+packet.getLength());
@@ -263,7 +265,6 @@ class ServerMulticast extends Thread{
                     }
 
                     if(pares[1].equals("getListaCandidatos")){
-                        String nomeEleicao;
                         ArrayList<String> listaCandidatos;
                         pares = tokens[1].split("\\|");
                         nomeEleicao = pares[1];
@@ -286,16 +287,36 @@ class ServerMulticast extends Thread{
                         socket.send(packet);
 
                         //=============================================================================================
-
-
-
-
                     }
 
-                    
+                    if(pares[1].equals("voto")){
+                        pares = tokens[1].split("\\|");
+                        nomeEleicao = pares[1];
 
+                        pares = tokens[2].split("\\|");
+                        listaEscolhida = pares[1];
 
+                        pares = tokens[3].split("\\|");
+                        num = Integer.parseInt(pares[1]);
 
+                        //Id do terminal já é guardado no inicio
+
+                        if(server.processaVoto(nomeEleicao, listaEscolhida, num, departamento)){
+
+                            //voto aceite
+                            message = "type|estadoVoto;estado|aceite;target|" + idTerminal;
+
+                        }
+                        else{
+                            //voto recusado
+                            message = "type|estadoVoto;estado|recusado;target|" + idTerminal;
+                        }
+
+                        buffer = message.getBytes();
+                        packet = new DatagramPacket(buffer, buffer.length, group, PORT_COMUNICAR);
+                        socket.send(packet);
+
+                    }
                 } catch (InterruptedException e) {
                 } catch(IOException io){
                 }
