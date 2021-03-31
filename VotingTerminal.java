@@ -35,17 +35,24 @@ class VotingThread implements Runnable{
 
             socket = new MulticastSocket(PORT_COMUNICAR);  // create socket and bind it
             InetAddress group = InetAddress.getByName(MULTICAST_COMUNICAR);
-            int numero; //numero ao fazer login
+            int numero = 0; //numero ao fazer login
             String pass; //password de login
             int auxId; //Variavel para verificar se a mensagem recebida é para o id do terminal. (VERIFICAR SE FOI ENVIADA PARA O TERMINAL CORRETO)
-
+            int valido = 0;
             socket.joinGroup(group); //entrar no grupo multicast
 
             byte[] buffer = new byte[256];
                 
 
-            System.out.print("Numero: ");
-            numero = Integer.parseInt(reader.readLine());
+            while(valido == 0){
+                try{
+                    System.out.print("Numero: ");
+                    numero = Integer.parseInt(reader.readLine());
+                    valido = 1;
+                } catch(NumberFormatException ne){
+                    System.out.println("Numero Invalido");
+                }
+            }
             System.out.print("Password: ");
             pass = reader.readLine();
 
@@ -222,7 +229,7 @@ class VotingThread implements Runnable{
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
+        }finally {
             socket.close();
         }
     }

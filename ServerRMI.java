@@ -228,6 +228,41 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 		return mesasVotoAbertas;
 	}
 
+
+
+	public ArrayList<ArrayList<String>> getVotosCadaMesa(String eleicao) throws java.rmi.RemoteException{
+
+		ArrayList<ArrayList<String>> historicoVotos;
+		ArrayList<ArrayList<String>> votosCadaMesa = new ArrayList<ArrayList<String>>();
+
+
+
+		for(int i = 0; i < mesasVotoAbertas.size(); i++){
+			int contadorVotos = 0;
+			for(int j = 0; j < eleitores.size(); j++){
+				historicoVotos = eleitores.get(j).getHistoricoVotos();
+
+				for(int k = 0; k < historicoVotos.size(); k++){
+					if(historicoVotos.get(k).get(0).equals(eleicao) && historicoVotos.get(k).get(1).equals(mesasVotoAbertas.get(i))){
+						contadorVotos++;
+					}
+				}
+			}
+			System.out.println(contadorVotos);
+			ArrayList<String> conjunto = new ArrayList<String>(); //PAR eleicao e local onde votou
+			conjunto.add(mesasVotoAbertas.get(i));
+			conjunto.add(""+contadorVotos);
+			votosCadaMesa.add(conjunto);
+		}
+
+		return votosCadaMesa;
+
+
+
+
+
+	}
+
 	public ArrayList<Pessoa> getEleitoresOnline() throws java.rmi.RemoteException{
 		ArrayList<Pessoa> eleitoresOnline = new ArrayList<Pessoa>();
 		for(int i=0; i<eleitores.size(); i++){
@@ -489,7 +524,6 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 				indiceEleitor = i;
 				if(eleitores.get(i).adicionaEleicaoVotada(eleicaoEscolhida, mesa)){
 					System.out.println("[VOTO] ELEITOR "+numEleitor+" PODE VOTAR NA ELEICAO "+eleicaoEscolhida);
-					writeToFile(0);
 					break;
 				}
 				else{
@@ -500,6 +534,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 		}
 
 		eleitores.get(indiceEleitor).setEstado(false);
+		writeToFile(0);
 
 		for(int i=0; i<eleicoes.size(); i++){
 			if(eleicoes.get(i).getTitulo().equals(eleicaoEscolhida)){
@@ -518,13 +553,56 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	}
 
 
-	public int getResultados(String eleicao) throws java.rmi.RemoteException{
+	public ArrayList<ArrayList<String>> getResultados(String eleicao) throws java.rmi.RemoteException{
+		Date dataAtual = Calendar.getInstance().getTime();
+
+		ArrayList<ArrayList<String>> resultados = new ArrayList<ArrayList<String>>();
+		ArrayList<String> conjunto = new ArrayList<String>();
+
+		ArrayList<ListaCandidatos> listacandidatos;
+
+
 		for(int i=0; i<eleicoes.size(); i++){
 			if(eleicoes.get(i).getTitulo().equals(eleicao)){
-				return eleicoes.get(i).getTotalVotos();
+				if(eleicoes.get(i).getEstado() == false || dataAtual.compareTo(eleicoes.get(i).getDataFim()) > 0){
+					eleicoes.get(i).setEstado(false);
+
+					//[[total de votos,200]; [brancos,2]; [nulos, 10];[listaA, 1]]
+					conjunto.add("Total");
+					conjunto.add(""+eleicoes.get(i).getTotalVotos());
+					resultados.add(conjunto);
+					
+					conjunto = new ArrayList<String>();
+					conjunto.add("Brancos");
+					conjunto.add(""+eleicoes.get(i).getVotosBrancos());
+					resultados.add(conjunto);
+
+					conjunto = new ArrayList<String>();
+					conjunto.add("Nulos");
+					conjunto.add(""+eleicoes.get(i).getVotosNulos());
+					resultados.add(conjunto);
+
+					listacandidatos = eleicoes.get(i).getListasCandidatos();
+
+					for(int j = 0; j < listacandidatos.size(); j++){
+
+						conjunto = new ArrayList<String>();
+						conjunto.add(listacandidatos.get(j).getNome());
+						conjunto.add(""+listacandidatos.get(j).getVotos());
+						resultados.add(conjunto);
+					}
+
+					return resultados;
+				}
+				else{
+					return resultados;
+					//retorna array vazio->eleicao ainda a decorrer
+				}
+
+
 			}
 		}
-		return -1;
+		return null;
 	}
 
 

@@ -108,34 +108,29 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
             System.out.print("DATA FIM [dd-mm-aaaa hh:mm:ss]: ");
             s_data_fim = reader.readLine();
             data_fim = formatter.parse(s_data_fim);
-            System.out.print("EXISTE ALGUMA RESTRICAO [s/n]? ");
-            existRest = reader.readLine();
-            if(existRest.matches("s")){
-                System.out.print("EXISTE RESTRICAO QUANTO AO DEPARTAMENTO [s/n]? ");
-                existRestDep = reader.readLine();
-                if(existRestDep.matches("s")){
-                    System.out.print("DEPARTAMENTO ONDE IRA OCORRER A ELEICAO: ");
-                    restDep = reader.readLine();
-                }
-                System.out.print("EXISTE RESTRICAO QUANTO AO TIPO DE ELEITOR [s/n]? ");
-                existRestPess = reader.readLine();
-                if(existRestPess.matches("s")){
-                    System.out.print("TIPO DE ELEITOR [1-ESTUDANTE][2-DOCENTE][3-FUNCIONARIO]: ");
-                    escolhaEleitor = Integer.parseInt(reader.readLine());
-                    switch(escolhaEleitor){
-                        case 1:
-                            restPessoa = "ESTUDANTE";
-                            break;
-                        case 2:
-                            restPessoa = "DOCENTE";
-                            break;
-                        case 3:
-                            restPessoa = "FUNCIONARIO";
-                            break;
-                    }
-                }
-            }
+
+            System.out.print("EXISTE RESTRICAO QUANTO AO DEPARTAMENTO DO ELEITOR [s/n]? ");
+            existRestDep = reader.readLine();
+            if(existRestDep.matches("s") || existRestDep.matches("S")){
+                System.out.print("DEPARTAMENTO ONDE IRA OCORRER A ELEICAO: ");
+                restDep = reader.readLine();
+                restDep = restDep.toUpperCase();
+            }   
             
+            System.out.print("TIPO DE ELEITOR [1-ESTUDANTE][2-DOCENTE][3-FUNCIONARIO]: ");
+            escolhaEleitor = Integer.parseInt(reader.readLine());
+            switch(escolhaEleitor){
+                case 1:
+                    restPessoa = "ESTUDANTE";
+                    break;
+                case 2:
+                    restPessoa = "DOCENTE";
+                    break;
+                case 3:
+                    restPessoa = "FUNCIONARIO";
+                    break;
+            }
+        
             if(server.registarEleicao(new Eleicao(titulo, descricao, data_inicio, data_fim, restPessoa, restDep))){
                 System.out.println("\nELEICAO CRIADA COM SUCESSO");
             }
@@ -424,9 +419,13 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 
     private static void mostrarEleitoresTempoReal(ServerRMI_Interface server) throws java.rmi.ConnectException{
         try{
-
+            InputStreamReader input = new InputStreamReader(System.in);
+            BufferedReader reader = new BufferedReader(input);
             ArrayList<Pessoa> eleitoresOnline = server.getEleitoresOnline();
             int size = eleitoresOnline.size();
+
+            String eleicaoInput;
+
             if(size==0){
                 System.out.println("SEM ELEITORES ONLINE");
             }
@@ -436,6 +435,15 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
                     System.out.println("    "+eleitoresOnline.get(i));
                 }
             }
+
+            System.out.println("===========================================");
+
+            System.out.println("ELEICAO: ");
+            eleicaoInput = reader.readLine();
+
+            ArrayList<ArrayList<String>> votosCadaMesa = server.getVotosCadaMesa(eleicaoInput);
+            System.out.println(votosCadaMesa);
+
 
         }catch(java.rmi.ConnectException c){
             throw c;
@@ -453,7 +461,27 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
             System.out.println("ELEICAO A CONSULTAR:  ");
             nomeEleicao = reader.readLine();
 
-            System.out.println("TOTAL VOTOS: "+server.getResultados(nomeEleicao));
+            ArrayList<ArrayList<String>> resultados = server.getResultados(nomeEleicao);
+            if(resultados == null){
+                System.out.println("A ELEICAO "+nomeEleicao+" NAO EXISTE");
+                return;
+            }
+            else if(resultados.size()==0){
+                System.out.println("A ELEICAO AINDA SE ENCONTRA A DECORRER");
+                return;
+            }
+            else{
+                int total = Integer.parseInt(resultados.get(0).get(1));
+                int brancos = Integer.parseInt(resultados.get(1).get(1));
+                int nulos = Integer.parseInt(resultados.get(2).get(1));
+                System.out.println("TOTAL VOTOS:      "+total);
+                System.out.println("VOTOS EM BRANCO:  "+brancos+"  "+(Double.valueOf(brancos)/total*100)+"%");
+                System.out.println("VOTOS NULOS:      "+nulos+"  "+(Double.valueOf(nulos)/total*100)+"%");
+                for(int i=3; i<resultados.size(); i++){
+                    int votosLista = Integer.parseInt(resultados.get(i).get(1));
+                    System.out.println(resultados.get(i).get(0)+":  "+votosLista+"  "+(Double.valueOf(votosLista)/total*100)+"%");
+                }
+            }
 
         }catch(java.rmi.ConnectException c){
             throw c;

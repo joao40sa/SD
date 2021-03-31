@@ -18,6 +18,7 @@ class Eleicao implements Serializable{
 	private int totalVotos;
 	private int votosBranco;
 	private int votosNulo;
+	private boolean estado; //estado da eleição;
 
 	public Eleicao(String titulo, String descricao, Date data_inicio, Date data_fim, String restPessoa, String restDep){
 		this.titulo = titulo;
@@ -31,6 +32,7 @@ class Eleicao implements Serializable{
 		this.votosBranco = 0;
 		this.votosNulo = 0;
 		this.totalVotos = 0;
+		this.estado = true; //true -> eleicao on ----------- false -> eleicao off
 	}
 
 	public boolean adicionaVoto(String lista){
@@ -151,5 +153,23 @@ class Eleicao implements Serializable{
 	public int getTotalVotos(){
 		return this.totalVotos;
 	}
+	
+	public int getVotosBrancos(){
+		return this.votosBranco;
+	}
 
+	public int getVotosNulos(){
+		return this.votosNulo;
+	}
+
+
+
+	public boolean getEstado(){
+		return this.estado;
+	}
+
+
+	public void setEstado(boolean state){
+		this.estado = state;
+	}
 }
