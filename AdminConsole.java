@@ -29,7 +29,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
 
     private static void registarEleitor() throws java.rmi.ConnectException, RemoteException    {
         String nome = null, password = null, departamento = null, faculdade = null, contacto = null, morada = null, validade_cc = null, funcao = null, tipo = null;
-        int numero = 0, opt = 0;
+        int numero = 0, opt = 0, valido=0;
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
 
@@ -54,8 +54,15 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
             faculdade = reader.readLine();
             System.out.print("DEPARTAMENTO: ");
             departamento = reader.readLine();
-            System.out.print("NUMERO: ");
-            numero = Integer.parseInt(reader.readLine());
+            while(valido == 0){
+                try{
+                    System.out.print("NUMERO: ");
+                    numero = Integer.parseInt(reader.readLine());
+                    valido = 1;
+                } catch(NumberFormatException ne){
+                    System.out.println("Numero Invalido");
+                }
+            }
             System.out.print("CONTACTO: ");
             contacto = reader.readLine();
             System.out.print("MORADA: ");
