@@ -13,6 +13,7 @@ import java.text.ParseException;
 public class AdminConsole extends UnicastRemoteObject implements AdminConsole_Interface{
 
     private int REG_PORT = 7000;
+    private static ServerRMI_Interface server;
 
     public AdminConsole() throws RemoteException{
         super();
@@ -26,9 +27,9 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
     
     /*===============*/
 
-    private static void registarEleitor(ServerRMI_Interface server) throws java.rmi.ConnectException    {
-        String nome, password, departamento, faculdade, contacto, morada, validade_cc, funcao, tipo = null;
-        int numero, opt;
+    private static void registarEleitor() throws java.rmi.ConnectException, RemoteException    {
+        String nome = null, password = null, departamento = null, faculdade = null, contacto = null, morada = null, validade_cc = null, funcao = null, tipo = null;
+        int numero = 0, opt = 0;
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
 
@@ -80,15 +81,21 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
                 System.out.println("\n[ERRO NO REGISTO]  JA EXISTE UM REGISTO DE PESSOA COM O NUMERO: " +numero);
             }
         }catch(java.rmi.ConnectException c){
-            throw c;
-        }catch(IOException e1)      {
+            connectToServerRMI();
+            if(server.registarPessoa(new Pessoa(nome, password, departamento, faculdade, contacto, morada, numero, validade_cc,tipo))){
+                System.out.println("\nREGISTO COM SUCESSO");
+            }
+            else{
+                System.out.println("\n[ERRO NO REGISTO]  JA EXISTE UM REGISTO DE PESSOA COM O NUMERO: " +numero);
+            }
+        }catch(IOException e1){
             System.out.println(e1);
         }catch(NumberFormatException  e){
             System.out.println("FORMATO INVALIDO NO NUMERO");
         }
     }
 
-    private static void criarEleicao(ServerRMI_Interface server) throws java.rmi.ConnectException {
+    private static void criarEleicao() throws java.rmi.ConnectException {
         String s_data_inicio, s_data_fim, titulo, descricao, restPessoa = null, restDep = null, existRest, existRestPess, existRestDep;
         int escolhaEleitor;
         Date data_inicio, data_fim;
@@ -147,7 +154,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
         }
     }
 
-    private static void alterarDadosEleicao(ServerRMI_Interface server)  throws java.rmi.ConnectException{
+    private static void alterarDadosEleicao()  throws java.rmi.ConnectException{
         int auxData;
         String alterar, nomeEleicao, newNome = null, newDescricao = null, s_data_inicio, s_data_fim;
         Date newDataInicio = null, newDataFim = null;
@@ -235,7 +242,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
         }
     }
 
-    private static void gerirListaCandidatos(ServerRMI_Interface server) throws java.rmi.ConnectException {
+    private static void gerirListaCandidatos() throws java.rmi.ConnectException {
         int opt;
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
@@ -249,10 +256,10 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
                 case 0:
                     break;
                 case 1:
-                    adicionaCandidatura(server);
+                    adicionaCandidatura();
                     break;
                 case 2:
-                    eliminaCandidatura(server);
+                    eliminaCandidatura();
                     break;
             }
         } catch(java.rmi.ConnectException c){
@@ -264,7 +271,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
         }
     }
 
-    private static void adicionaCandidatura(ServerRMI_Interface server) throws java.rmi.ConnectException{
+    private static void adicionaCandidatura() throws java.rmi.ConnectException{
         String nomeCandidatura = null, nomeEleicao = null;
         int numero, n=0, is_ok = -1;
         ArrayList<Integer> candidatos = new ArrayList<Integer>();
@@ -334,7 +341,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
         
     }
 
-    private static void eliminaCandidatura(ServerRMI_Interface server) throws java.rmi.ConnectException{
+    private static void eliminaCandidatura() throws java.rmi.ConnectException{
         String nomeCandidatura, nomeEleicao;
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
@@ -357,7 +364,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
         }
     }
 
-    private static void gerirMesasVoto(ServerRMI_Interface server) throws java.rmi.ConnectException{
+    private static void gerirMesasVoto() throws java.rmi.ConnectException{
         String nomeEleicao, nomeMesa;
         int opt;
         InputStreamReader input = new InputStreamReader(System.in);
@@ -395,7 +402,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
         }
     }
 
-    private static void mostarEstadoMesasVoto(ServerRMI_Interface server) throws java.rmi.ConnectException{
+    private static void mostarEstadoMesasVoto() throws java.rmi.ConnectException{
         try{
 
             ArrayList<String> mesas = server.getMesasVotoAbertas();
@@ -417,14 +424,14 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
         }
     }
 
-    private static void mostrarEleitoresTempoReal(ServerRMI_Interface server) throws java.rmi.ConnectException{
+    private static void mostrarEleitoresTempoReal() throws java.rmi.ConnectException{
         try{
             InputStreamReader input = new InputStreamReader(System.in);
             BufferedReader reader = new BufferedReader(input);
             ArrayList<Pessoa> eleitoresOnline = server.getEleitoresOnline();
             int size = eleitoresOnline.size();
 
-            String eleicaoInput;
+            
 
             if(size==0){
                 System.out.println("SEM ELEITORES ONLINE");
@@ -436,13 +443,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
                 }
             }
 
-            System.out.println("===========================================");
-
-            System.out.println("ELEICAO: ");
-            eleicaoInput = reader.readLine();
-
-            ArrayList<ArrayList<String>> votosCadaMesa = server.getVotosCadaMesa(eleicaoInput);
-            System.out.println(votosCadaMesa);
+            
 
 
         }catch(java.rmi.ConnectException c){
@@ -452,7 +453,36 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
         }
     }
 
-    private static void mostraResultados(ServerRMI_Interface server) throws java.rmi.ConnectException{
+    public static void mostraVotosNasMesas() throws java.rmi.ConnectException{
+        try{
+            InputStreamReader input = new InputStreamReader(System.in);
+            BufferedReader reader = new BufferedReader(input);
+            String eleicaoInput;
+            int nMesas;
+
+            System.out.print("ELEICAO: ");
+            eleicaoInput = reader.readLine();
+
+            ArrayList<ArrayList<String>> votosCadaMesa = server.getVotosCadaMesa(eleicaoInput);
+            nMesas = votosCadaMesa.size();
+
+            if(nMesas == 0){
+                System.out.println("\nSEM MESAS ABERTAS");
+                return;
+            }
+            System.out.println("CONTAGEM DE VOTOS NAS MESAS ATE AO MOMENTO: ");
+            for(int i=0; i<nMesas; i++){
+                System.out.println(votosCadaMesa.get(i).get(0)+":   "+votosCadaMesa.get(i).get(1)+" votos");
+            }
+
+        }catch(java.rmi.ConnectException c){
+            throw c;
+        }catch(IOException  i){
+            System.out.println("EXCECAO");
+        }
+    }
+
+    private static void mostraResultados() throws java.rmi.ConnectException,RemoteException{
         try{
             String nomeEleicao;
             InputStreamReader input = new InputStreamReader(System.in);
@@ -484,16 +514,17 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
             }
 
         }catch(java.rmi.ConnectException c){
-            throw c;
+           connectToServerRMI();
         }catch(IOException  i){
             System.out.println("EXCECAO");
         }
     }
 
 
-    private static void mostraLocalDoVoto(ServerRMI_Interface server) throws java.rmi.ConnectException{
+    private static void mostraLocalDoVoto() throws java.rmi.ConnectException, RemoteException{
+        int numEleitor = 0;
         try{
-            int numEleitor;
+            
             InputStreamReader input = new InputStreamReader(System.in);
             BufferedReader reader = new BufferedReader(input);
 
@@ -503,13 +534,25 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
             System.out.println("INFORMACAO: "+server.getHistoricoVotos(numEleitor));
 
         }catch(java.rmi.ConnectException c){
-            throw c;
+            connectToServerRMI();
+            System.out.println("INFORMACAO: "+server.getHistoricoVotos(numEleitor));
         }catch(IOException  i){
             System.out.println("EXCECAO");
         }
     }
     
+    private static void connectToServerRMI() throws java.rmi.ConnectException, RemoteException{
+        String ligado = "NOVO ADMINISTRADOR CONECTADO";
+        try{
+            server = (ServerRMI_Interface) LocateRegistry.getRegistry(7000).lookup("ServerRMI");
+        }
+        catch(java.rmi.ConnectException c){
+            System.out.println("SERVIDORES DOWN");
+        } catch(NotBoundException ne){
 
+        }
+        
+    }
 
     public static void main(String args[]) {
 
@@ -519,7 +562,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
         */
         try {
 
-            ServerRMI_Interface server = (ServerRMI_Interface) LocateRegistry.getRegistry(7000).lookup("ServerRMI");
+            server = (ServerRMI_Interface) LocateRegistry.getRegistry(7000).lookup("ServerRMI");
 
             String ligado = "NOVO ADMINISTRADOR CONECTADO";
             server.print_on_ServerRMI(ligado);
@@ -542,7 +585,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
                     System.out.println("[6]  ONDE VOTOU O ELEITOR");
                     System.out.println("[7]  ESTADO DAS MESAS DE VOTO");
                     System.out.println("[8]  MOSTRAR ELEITORES EM TEMPO REAL");
-                    System.out.println("[9]  TERMINAR ELEICAO");
+                    System.out.println("[9]  CONTAGEM VOTOS NAS MESAS");
                     System.out.println("[10] RESULTADOS");
                     System.out.print("\nINSIRA O ID DA OPERACAO A EXECUTAR: ");
                     option = Integer.parseInt(reader.readLine());
@@ -552,52 +595,52 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
                             break;
                         case 1:
                             System.out.println("\n=============REGISTAR ELEITOR=============\n");
-                            registarEleitor(server);
+                            registarEleitor();
                             System.out.println("\n==========================================\n");
                             break;
                         case 2:
                             System.out.println("\n==============CRIAR ELEICAO===============\n");
-                            criarEleicao(server);
+                            criarEleicao();
                             System.out.println("\n==========================================\n");
                             break;
                         case 3:
                             System.out.println("\n========GERIR LISTAS DE CANDIDATOS========\n");
-                            gerirListaCandidatos(server);
+                            gerirListaCandidatos();
                             System.out.println("\n==========================================\n");
                             break;
                         case 4:
                             System.out.println("\n===========GERIR MESAS DE VOTO============\n");
-                            gerirMesasVoto(server);
+                            gerirMesasVoto();
                             System.out.println("\n==========================================\n");
                             break;
                         case 5:
                             System.out.println("\n===ALTERAR PROPRIEDADES DE UMA ELEICAO====\n");
-                            alterarDadosEleicao(server);
+                            alterarDadosEleicao();
                             System.out.println("\n==========================================\n");
                             break;
                         case 6:
                             System.out.println("\n===========ONDE VOTOU O ELEITOR===========\n");
-                            mostraLocalDoVoto(server);
+                            mostraLocalDoVoto();
                             System.out.println("\n==========================================\n");
                             break;
                         case 7:
                             System.out.println("\n=========ESTADO DAS MESAS DE VOTO=========\n");
-                            mostarEstadoMesasVoto(server);
+                            mostarEstadoMesasVoto();
                             System.out.println("\n==========================================\n");
                             break;
                         case 8:
                             System.out.println("\n=====MOSTRAR ELEITORES EM TEMPO REAL======\n");
-                            mostrarEleitoresTempoReal(server);
+                            mostrarEleitoresTempoReal();
                             System.out.println("\n==========================================\n");
                             break;
                         case 9:
-                            System.out.println("\n============TERMINAR ELEICAO==============\n");
-                            
+                            System.out.println("\n=========CONTAGEM VOTOS NAS MESAS=========\n");
+                            mostraVotosNasMesas();
                             System.out.println("\n==========================================\n");
                             break;
                         case 10:
                             System.out.println("\n===============RESULTADOS=================\n");
-                            mostraResultados(server);
+                            mostraResultados();
                             System.out.println("\n==========================================\n");
                             break;
 
@@ -608,7 +651,7 @@ public class AdminConsole extends UnicastRemoteObject implements AdminConsole_In
                     server.print_on_ServerRMI(ligado);
                 }
                 catch(IOException e){
-                    System.out.println("fds");
+                    System.out.println("EXCECAO");
                 }
             }
 

@@ -4,8 +4,27 @@ import java.net.InetAddress;
 import java.io.IOException;
 import java.util.Scanner;
 import java.io.*;
+import java.util.*;
+import java.nio.charset.StandardCharsets;
 
 //deixar comment
+abstract class MyTimerTask extends TimerTask
+{
+  public int secondsPassed;
+  public Thread t;
+  public MulticastSocket s;
+  public MyTimerTask(int secondsPassed, Thread t, MulticastSocket s){
+    this.secondsPassed = secondsPassed;
+    this.t = t;
+    this.s = s;
+  }
+  public void init(int arg)
+  {
+    secondsPassed = arg;
+  }
+}
+
+
 class VotingThread implements Runnable{
     String id; // name of thread
     Thread t;
@@ -29,32 +48,56 @@ class VotingThread implements Runnable{
         String listaEscolhida = null; //lista candidata da eleicao em que o eleitore escolheu votar
 
         try {
-
             InputStreamReader input = new InputStreamReader(System.in);
             BufferedReader reader = new BufferedReader(input);
 
             socket = new MulticastSocket(PORT_COMUNICAR);  // create socket and bind it
             InetAddress group = InetAddress.getByName(MULTICAST_COMUNICAR);
             int numero = 0; //numero ao fazer login
-            String pass; //password de login
+            String pass = null; //password de login
             int auxId; //Variavel para verificar se a mensagem recebida é para o id do terminal. (VERIFICAR SE FOI ENVIADA PARA O TERMINAL CORRETO)
             int valido = 0;
+            int opcaoEscolhida = -1; //variavel de escolha da eleicao
             socket.joinGroup(group); //entrar no grupo multicast
 
             byte[] buffer = new byte[256];
-                
+            
+            Timer timer = new Timer();
+            MyTimerTask task = null;
+
+                task = new MyTimerTask(0, t, socket){
+                    public void run()  {
+                        secondsPassed++;
+                        //System.out.println("PASSOU "+secondsPassed);
+                        if(secondsPassed == 60){
+                            timer.cancel();
+                            s.close();
+                            t.stop();
+                            
+                           
+                            return;
+                        }
+                    }
+                };    
+            
+            
+            timer.scheduleAtFixedRate(task,1000,1000); 
 
             while(valido == 0){
                 try{
                     System.out.print("Numero: ");
                     numero = Integer.parseInt(reader.readLine());
                     valido = 1;
+                    task.secondsPassed = 0;
                 } catch(NumberFormatException ne){
                     System.out.println("Numero Invalido");
                 }
             }
+
             System.out.print("Password: ");
             pass = reader.readLine();
+            task.secondsPassed = 0;            
+            
 
             String message =  "type|login;username|" + numero + ";password|" + pass +";sender|"+id;  
             
@@ -107,11 +150,21 @@ class VotingThread implements Runnable{
                             System.out.println("***********  " + msg + "  ***********");
 
 
+                            valido = 0;
+                            while(valido == 0){
+                                try{
+                                    System.out.print("Numero: ");
+                                    numero = Integer.parseInt(reader.readLine());
+                                    valido = 1;
+                                    task.secondsPassed = 0;
+                                } catch(NumberFormatException ne){
+                                    System.out.println("Numero Invalido");
+                                }
+                            }
 
-                            System.out.println("Numero: ");
-                            numero = Integer.parseInt(reader.readLine());
-                            System.out.println("Password: ");
+                            System.out.print("Password: ");
                             pass = reader.readLine();
+                            task.secondsPassed = 0; 
 
                             message =  "type|login;username|" + numero + ";password|" + pass;  
                             
@@ -126,7 +179,7 @@ class VotingThread implements Runnable{
                 
                     if(pares[1].equals("listaEleicoes")){
                         int nEleicoes; //numero de eleicoes disponiveis para votar
-                        int opcaoEscolhida; //variavel de escolha da eleicao
+                        
 
 
                         pares = tokens[1].split("\\|");
@@ -142,8 +195,17 @@ class VotingThread implements Runnable{
                                 System.out.println("    ["+(i+1)+"]  "+pares[1]);
                             }
 
-                            System.out.print("OPCAO: ");
-                            opcaoEscolhida = Integer.parseInt(reader.readLine());
+                            valido = 0;
+                            while(valido == 0){
+                                try{
+                                    System.out.print("OPCAO: ");
+                                    opcaoEscolhida = Integer.parseInt(reader.readLine());
+                                    valido = 1;
+                                    task.secondsPassed = 0;
+                                } catch(NumberFormatException ne){
+                                    System.out.println("OPCAO INVALIDA");
+                                }
+                            }
 
                             
                             pares = tokens[opcaoEscolhida+1].split("\\|"); //+2 por causa do offset da mensagem
@@ -165,7 +227,6 @@ class VotingThread implements Runnable{
                     if(pares[1].equals("returnListaCandidatos")){
 
                         int nListas; //numero de eleicoes disponiveis para votar
-                        int opcaoEscolhida; //variavel de escolha da eleicao
 
 
                         pares = tokens[1].split("\\|");
@@ -183,8 +244,17 @@ class VotingThread implements Runnable{
                             System.out.println("    ["+(nListas+1)+"]  VOTO BRANCO");
                             System.out.println("    ["+(nListas+2)+"]  VOTO NULO");
 
-                            System.out.print("OPCAO: ");
-                            opcaoEscolhida = Integer.parseInt(reader.readLine());
+                            valido = 0;
+                            while(valido == 0){
+                                try{
+                                    System.out.print("OPCAO: ");
+                                    opcaoEscolhida = Integer.parseInt(reader.readLine());
+                                    valido = 1;
+                                    task.secondsPassed = 0;
+                                } catch(NumberFormatException ne){
+                                    System.out.println("OPCAO INVALIDA");
+                                }
+                            }
 
                             if(opcaoEscolhida == nListas+1){
                                 listaEscolhida = "branco";
@@ -229,6 +299,10 @@ class VotingThread implements Runnable{
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }catch(IllegalStateException te){
+            System.out.println("FIM TIMER");
+            socket.close();
+            return;
         }finally {
             socket.close();
         }
