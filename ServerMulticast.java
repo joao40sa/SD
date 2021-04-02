@@ -2,11 +2,17 @@ import java.net.MulticastSocket;
 import java.net.Socket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.rmi.*;
+import java.rmi.server.*;
+import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.util.ArrayList;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;  
+import java.util.Date; 
+import java.text.ParseException;
 
 class ServerMulticast extends Thread{
 
@@ -24,7 +30,7 @@ class ServerMulticast extends Thread{
         this.MULTICAST_COMUNICAR = grupoComunicar;
     }
 
-    public static void doSomething(ServerRMI_Interface server){
+    public static void doSomething(){
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
         int opt;
@@ -33,23 +39,9 @@ class ServerMulticast extends Thread{
 
             while(true){
                 try{
-                System.out.println("[0]  DESBLOQUEIA TERMINAL");
-                System.out.println("[1]  IDENTIFICAR ELEITOR");
-                System.out.print("OPCAO:  ");
-                opt = Integer.parseInt(reader.readLine());
-
-                switch(opt){
-                    case 0:
-                        desbloqueiaTerminal();
-                        break;
-                    case 1:
-                        identificarEleitor(server);
-                        break;
-
-                }
+                    identificarEleitor();
 
                 }catch(Exception e){
-
                 }
             }
 
@@ -60,7 +52,10 @@ class ServerMulticast extends Thread{
         
     }
 
-    public static void identificarEleitor(ServerRMI_Interface server){
+
+    
+
+    public static void identificarEleitor(){
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
         int numero;
@@ -68,9 +63,18 @@ class ServerMulticast extends Thread{
 
             System.out.print("NUMERO DE IDENTIFICACAO: ");
             numero = Integer.parseInt(reader.readLine());
-            if(server.identificarEleitor(numero)){
-                System.out.println("\nIDENTIFICACAO CONCLUIDA COM SUCESSO\n");
-                desbloqueiaTerminal();
+            try{
+                if(server.identificarEleitor(numero)){
+                    System.out.println("\nIDENTIFICACAO CONCLUIDA COM SUCESSO\n");
+                    desbloqueiaTerminal();
+                }
+            }catch(java.rmi.ConnectException c){
+                connectToRMI();
+            
+                if(server.identificarEleitor(numero)){
+                    System.out.println("\nIDENTIFICACAO CONCLUIDA COM SUCESSO\n");
+                    desbloqueiaTerminal();
+                }
             }
 
 
@@ -139,6 +143,17 @@ class ServerMulticast extends Thread{
         }
     }
 
+    public static void connectToRMI() throws java.rmi.ConnectException, RemoteException{
+        
+        try{
+            server = (ServerRMI_Interface) LocateRegistry.getRegistry(7000).lookup("ServerRMI");
+        }catch(java.rmi.ConnectException c){
+            System.out.println("SERVIDORES DOWN");
+        }catch(NotBoundException ne){
+
+        }
+    }
+
     public static void main(String[] args) {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
@@ -154,7 +169,7 @@ class ServerMulticast extends Thread{
                 ServerMulticast mesa = new ServerMulticast(departamento, gruposMulticast.get(0), gruposMulticast.get(1));
 
                 mesa.start();// thread que vai comunicar com os terminais com eleitores la
-                doSomething(server);
+                doSomething();
             }
             else{
                 System.out.println("[IMPOSSIVEL ABRIR MESA DE VOTO]");
@@ -220,8 +235,18 @@ class ServerMulticast extends Thread{
                         num = Integer.parseInt(pares[1]);
                         pares = tokens[2].split("\\|");
                         pass = pares[1];
-                        
-                        if( server.verificaLogin(num, pass)){
+                        boolean verificao;
+                        try{
+                            verificao= server.verificaLogin(num, pass);
+
+                        }catch(java.rmi.ConnectException c){
+                            connectToRMI();
+                            verificao= server.verificaLogin(num, pass);
+                            
+
+                        }
+
+                        if(verificao){
                             //envia mensagem com as eleições a decorrer
 
                             //depois de escolher, devolver as listas canidatas
@@ -235,7 +260,14 @@ class ServerMulticast extends Thread{
                             packet = new DatagramPacket(buffer, buffer.length, group, PORT_COMUNICAR);
                             socket.send(packet);
 
-                            arrayEleicao = server.eleicoesAtivas(num);
+                            try{
+                                arrayEleicao = server.eleicoesAtivas(num);
+                            }
+                            catch(java.rmi.ConnectException c){
+                                connectToRMI();
+                                arrayEleicao = server.eleicoesAtivas(num);
+
+                            }
                             //System.out.println(arrayEleicao);
 
                             //====== ENVIAR MENSAGEM COM AS ELEIÇÕES DE ACORDO COM AS CARACTERISTICA DO ELEITOR =========================
@@ -272,8 +304,12 @@ class ServerMulticast extends Thread{
                         pares = tokens[2].split("\\|");
                         num = Integer.parseInt(pares[1]);
 
-                        listaCandidatos = server.getListaCandidatos(nomeEleicao, num);
-
+                        try{
+                            listaCandidatos = server.getListaCandidatos(nomeEleicao, num);
+                        }catch(java.rmi.ConnectException c){
+                            connectToRMI();
+                            listaCandidatos = server.getListaCandidatos(nomeEleicao, num);
+                        }    
                         //System.out.println(listaCandidatos);
 
                         //====== ENVIAR MENSAGEM COM AS LISTAS DE CANDIDATOS DE ACORDO COM A ELEICAO =========================
@@ -303,17 +339,33 @@ class ServerMulticast extends Thread{
                         num = Integer.parseInt(pares[1]);
 
                         //Id do terminal já é guardado no inicio
-
-                        if(server.processaVoto(nomeEleicao, listaEscolhida, num, departamento)){
+                        try{
+                            
+                            if(server.processaVoto(nomeEleicao, listaEscolhida, num, departamento)){
 
                             //voto aceite
                             message = "type|estadoVoto;estado|aceite;target|" + idTerminal;
 
+                            }
+                            else{
+                                //voto recusado
+                                message = "type|estadoVoto;estado|recusado;target|" + idTerminal;
+                            }
+                        }catch(java.rmi.ConnectException c){
+                            connectToRMI();
+                            if(server.processaVoto(nomeEleicao, listaEscolhida, num, departamento)){
+
+                                //voto aceite
+                                message = "type|estadoVoto;estado|aceite;target|" + idTerminal;
+    
+                            }
+                            else{
+                                //voto recusado
+                                message = "type|estadoVoto;estado|recusado;target|" + idTerminal;
+                            }
                         }
-                        else{
-                            //voto recusado
-                            message = "type|estadoVoto;estado|recusado;target|" + idTerminal;
-                        }
+                        
+                        
 
                         buffer = message.getBytes();
                         packet = new DatagramPacket(buffer, buffer.length, group, PORT_COMUNICAR);
