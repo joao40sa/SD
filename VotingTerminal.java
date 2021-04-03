@@ -166,7 +166,7 @@ class VotingThread implements Runnable{
                             pass = reader.readLine();
                             task.secondsPassed = 0; 
 
-                            message =  "type|login;username|" + numero + ";password|" + pass;  
+                            message =  "type|login;username|" + numero + ";password|" + pass +";sender|"+id;  
                             
                             buffer = message.getBytes();
 
