@@ -38,7 +38,7 @@ class VotingThread implements Runnable{
         t.start(); // Start the thread
     }
 
-    public void run() {
+    public void run() { //thread que ira comunicar a intencao de voto
         System.out.println("[TERMINAL DESBLOQUEADO]");
         MulticastSocket socket = null;
         String[] tokens;
@@ -65,7 +65,7 @@ class VotingThread implements Runnable{
             Timer timer = new Timer();
             MyTimerTask task = null;
 
-                task = new MyTimerTask(0, t, socket){
+                task = new MyTimerTask(0, t, socket){ // para bloquar o terminal a fim de 60 seg (temos um problema e é necessario dar enter para bloquear de facto)
                     public void run()  {
                         secondsPassed++;
                         //System.out.println("PASSOU "+secondsPassed);
@@ -343,7 +343,7 @@ class VotingTerminal extends Thread{
         } 
     }
 
-    private static void connect(){
+    private static void connect(){ //thread para comunicar o estado da mesa de voto e eventualmente receber um eleitor
         MulticastSocket socket = null;
         String[] tokens;
         String[] pares;
