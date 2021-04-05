@@ -141,6 +141,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 	/*MÉTODOS REMOTOS*/
 	public ArrayList<String> getGruposMulticast(String departamentoMesa) throws java.rmi.RemoteException {
+		//devolve quais os grupos multicast respetivos a uma determinada mesa de voto
 		int ind = 0;
 		ArrayList<String> grupos = new ArrayList<String>();
 		for(int i=0; i<departamentos.length; i++){
@@ -156,6 +157,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 
 	public boolean abreMesaVoto(String departamentoMesa) throws java.rmi.RemoteException {
+		//abre uma mesa de voto(apenas existem 5 disponiveis ate ao momento)
 		//se já existe uma mesa de voto no departamento não é possivel abri uma nova
 		if(existeMesa(departamentoMesa)){
 			for(int i=0; i<mesasVotoAbertas.size(); i++){
@@ -177,6 +179,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	}
 
 	public boolean adicionaMesa(String nomeEleicao, String nomeMesa) throws java.rmi.RemoteException {
+		//adiciona uma mesa a uma eleicao
 		if(existeMesa(nomeMesa)){
 			for(int i=0; i<eleicoes.size(); i++){
 				if(eleicoes.get(i).getTitulo().equals(nomeEleicao)){
@@ -201,6 +204,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	}
 
 	public boolean removeMesa(String nomeEleicao, String nomeMesa) throws java.rmi.RemoteException{
+		//remove uma mesa de uma eleicao
 		if(existeMesa(nomeMesa)){
 			for(int i=0; i<eleicoes.size(); i++){
 				if(eleicoes.get(i).getTitulo().equals(nomeEleicao)){
@@ -225,13 +229,14 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	}
 
 	public ArrayList<String> getMesasVotoAbertas() throws java.rmi.RemoteException{
+		//devolve quais as mesas abertas
 		return mesasVotoAbertas;
 	}
 
 
 
 	public ArrayList<ArrayList<String>> getVotosCadaMesa(String eleicao) throws java.rmi.RemoteException{
-
+		//devolve quantas pessoas ja votaram ate ao momento nas mesas que se encontram abertas 
 		ArrayList<ArrayList<String>> historicoVotos;
 		ArrayList<ArrayList<String>> votosCadaMesa = new ArrayList<ArrayList<String>>();
 
@@ -264,6 +269,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	}
 
 	public ArrayList<Pessoa> getEleitoresOnline() throws java.rmi.RemoteException{
+		//devolve quais os eleitores online(que estao num terminal de voto)
 		ArrayList<Pessoa> eleitoresOnline = new ArrayList<Pessoa>();
 		for(int i=0; i<eleitores.size(); i++){
 			if(eleitores.get(i).getEstado())
@@ -277,6 +283,8 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	}
 
 	public boolean registarEleicao(Eleicao e) throws java.rmi.RemoteException   {
+		//regista uma eleicao
+		//nome da eleicao e unico
 		boolean add = true;
 		System.out.println("Entrou no server registar eleicao");
 		for(int i=0; i<eleicoes.size(); i++){
@@ -297,6 +305,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	}
 
 	public boolean alterarEleicao(String nomeEleicao, String newNome, String newDescricao, Date newDataInicio, Date newDataFim) throws java.rmi.RemoteException{
+		//altera dados de uma eleicao se esta ainda nao comecou
 		int indEleicao = -1;
 		Date dataAtual;
 		/*
@@ -341,6 +350,8 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	}
 
 	public boolean registarPessoa(Pessoa p) throws java.rmi.RemoteException{
+		//regista uma pessoa
+		//numero é o identificador unico de uma pessoa logo nao pode haver repeticoes
 		boolean add = true;
 		for(int i=0; i<eleitores.size(); i++)	{
 			if(eleitores.get(i).getNumero() == p.getNumero())
@@ -360,6 +371,8 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	}
 
 	public boolean adicionaCandidatura(String nomeEleicao, String nomeCandidatura, ArrayList<Integer> lista) throws java.rmi.RemoteException	{//FALTA MELHORAR, é preciso fazer verificação se os candidatos pertencem ao cargo certo
+		//adiciona uma lista nas candidaturas de uma eleica
+		//so pode haver uma lista com um determinado nome e nao pode haver uma pessoa em dois cargos diferentes
 		ArrayList<Pessoa> candidatos = new ArrayList<Pessoa>();
 		ListaCandidatos candidatura;
 		int indEleicao = -1;
@@ -407,6 +420,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	}
 
 	public boolean removeCandidatura(String nomeEleicao, String nomeCandidatura) throws java.rmi.RemoteException{
+		//remove uma lista das candidaturas a uma eleicao
 		for(int i=0; i<eleicoes.size(); i++){
 			if(eleicoes.get(i).getTitulo().equals(nomeEleicao)){
 				if(eleicoes.get(i).removeListaCandidatos(nomeCandidatura)){
@@ -423,6 +437,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	}
 
 	public boolean identificarEleitor(int numero) throws java.rmi.RemoteException{
+		//verifica se existe algum eleitor com o numero passado por parametro
 		for(int i=0; i<eleitores.size(); i++){
 			if(eleitores.get(i).getNumero() == numero){
 				System.out.println("ELEITOR "+numero+" IDENTIFICADO");
@@ -434,6 +449,8 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 
 	public ArrayList<Eleicao> eleicoesAtivas(int num) throws java.rmi.RemoteException{
+		//devolve todas as eleicoes que estao a decorrer no exato momento e na qual o eleitor pode votar
+		//para poder votar o eleitor deve corresponder a todos os requisitos da eleicao
 		Date dataAtual = Calendar.getInstance().getTime();
 		ArrayList<Eleicao> eleicoesAtuais = new ArrayList<Eleicao>();
 		Pessoa p = null;
@@ -471,6 +488,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 	//login
 	public boolean verificaLogin(int num, String pass) throws java.rmi.RemoteException{
+		//para ser valido o eleitor devera estar offline antes de efetuar o login e as credenciais devem estar corretas
 		for(int i=0; i<eleitores.size(); i++){
 			if(eleitores.get(i).getNumero() == num){
 				if(eleitores.get(i).getPassword().equals(pass)){
@@ -490,7 +508,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 
 	public ArrayList<String> getListaCandidatos(String nomeEleicao, int numeroEleitor) throws java.rmi.RemoteException{
-
+		//devolve todas as listas candidatas a uma eleicao
 		ArrayList<String> lista = new ArrayList<String>();
 		ArrayList<ListaCandidatos> listasCandi = null;
 		for(int i = 0; i < eleicoes.size(); i++){
@@ -518,6 +536,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 
 	public boolean processaVoto(String eleicaoEscolhida, String listaEscolhida, int numEleitor, String mesa) throws java.rmi.RemoteException{
+		//para o voto ser valido o eleitor ainda não deverá ter votado na eleicao antes
 		int indiceEleitor = 0; //guardar indice eleitor, depois de percorrer todos os eleitores
 		for(int i=0; i<eleitores.size(); i++){
 			if(eleitores.get(i).getNumero() == numEleitor){
@@ -554,6 +573,8 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 
 	public ArrayList<ArrayList<String>> getResultados(String eleicao) throws java.rmi.RemoteException{
+		//devolve os resultados da eleicao se esta já acabou 
+		//no formato [[total de votos,200]; [brancos,2]; [nulos, 10];[listaA, 1];[listaB, 4]; ...]
 		Date dataAtual = Calendar.getInstance().getTime();
 
 		ArrayList<ArrayList<String>> resultados = new ArrayList<ArrayList<String>>();
@@ -567,7 +588,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 				if(eleicoes.get(i).getEstado() == false || dataAtual.compareTo(eleicoes.get(i).getDataFim()) > 0){
 					eleicoes.get(i).setEstado(false);
 
-					//[[total de votos,200]; [brancos,2]; [nulos, 10];[listaA, 1]]
+					//[[total de votos,200]; [brancos,2]; [nulos, 10];[listaA, 1];[listaB, 4]; ...]
 					conjunto.add("Total");
 					conjunto.add(""+eleicoes.get(i).getTotalVotos());
 					resultados.add(conjunto);
@@ -602,11 +623,12 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 
 			}
 		}
-		return null;
+		return null; // nao existe nenhuma eleicao com aquele nome
 	}
 
 
 	public ArrayList<ArrayList<String>> getHistoricoVotos(int numEleitor) throws java.rmi.RemoteException{
+		//devolve todas as eleicoes em que o eleitor votou e os respetivos locais
 		for(int i=0; i<eleitores.size(); i++){
 			if(eleitores.get(i).getNumero() == numEleitor){
 				return eleitores.get(i).getHistoricoVotos();
@@ -617,7 +639,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 	/*=====================*/
 
 
-	private static void primarySide(){
+	private static void primarySide(){//responde aos heartbeats do server secundário
 		DatagramSocket aSocket = null;
 		String s;
 		try{
@@ -666,7 +688,7 @@ public class ServerRMI extends UnicastRemoteObject implements ServerRMI_Interfac
 				byte[] buffer = new byte[1000];
 				DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
 				
-				aSocket.setSoTimeout(3000);//ex 3.2 definir timeout para receber mensagens até 10 seg 
+				aSocket.setSoTimeout(3000);
 
 				try{
 					aSocket.receive(reply);
