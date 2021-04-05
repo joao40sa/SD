@@ -30,7 +30,7 @@ class ServerMulticast extends Thread{
         this.MULTICAST_COMUNICAR = grupoComunicar;
     }
 
-    public static void doSomething(){
+    public static void doSomething(){ //desbloqueia um terminal se possivel apos identificar o eleitor
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
         int opt;
@@ -77,13 +77,13 @@ class ServerMulticast extends Thread{
                 }
             }
 
-
+          
         }catch(IOException e){
             System.out.println("\nFORMATO DE DADOS INVALIDOS\n");
         }
     }
 
-    public static void desbloqueiaTerminal(){
+    public static void desbloqueiaTerminal(){//desbloqueia um terminal se possivel apos identificar o eleitor
         MulticastSocket socket = null;
         String estado, terminal = null;
         String message;
@@ -143,7 +143,7 @@ class ServerMulticast extends Thread{
         }
     }
 
-    public static void connectToRMI() throws java.rmi.ConnectException, RemoteException{
+    public static void connectToRMI() throws java.rmi.ConnectException, RemoteException{ //ligar ao server RMI
         
         try{
             server = (ServerRMI_Interface) LocateRegistry.getRegistry(7000).lookup("ServerRMI");
@@ -154,7 +154,7 @@ class ServerMulticast extends Thread{
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) { //abre a mesa de voto(apenas pode existir uma por departamento)
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
         ArrayList<String> gruposMulticast;
@@ -180,7 +180,7 @@ class ServerMulticast extends Thread{
         
     }
 
-    public void run() {
+    public void run() { //thread que comunica com os terminais desbloqueados 
         MulticastSocket socket = null;
         String[] tokens; //parsing da mensagem
         String[] pares; //parsing da mensagem
